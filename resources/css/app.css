@@ -1,0 +1,7 @@
+/* Override ukuran modal di Filament */
+.fi-modal-window {
+    max-width: 90vw !important;
+    width: 90vw !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+}
