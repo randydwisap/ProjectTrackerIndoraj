@@ -348,7 +348,8 @@ https://templatemo.com/tm-538-digital-trend
   }
 
   .hero-bg {
-    background: linear-gradient(170deg, var(--primary-color) 64%, var(--white-color) 30%);
+    background: linear-gradient(170deg, var(--primary-color) 20%, var(--white-color) 80%);
+
   }
 
   .hero-image {
