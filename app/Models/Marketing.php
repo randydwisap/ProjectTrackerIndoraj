@@ -56,6 +56,7 @@ class Marketing extends Model
         'dokumentasi_foto',
         'lampiran',
         'note',
+        'manajer_operasional',
     ];
 
     

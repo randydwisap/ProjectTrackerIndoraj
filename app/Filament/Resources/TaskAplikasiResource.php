@@ -3,37 +3,35 @@
 namespace App\Filament\Resources;
 
 use Filament\Tables\Columns\TextColumn;
-use App\Models\Task;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Resources\TaskResource\Pages;
+use App\Filament\Resources\TaskAplikasiResource\Pages;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
 use App\Models\Marketing;
-use App\Filament\Resources\TaskResource\RelationManagers\TaskWeekOverviewRelationManager;
-use App\Filament\Resources\TaskResource\RelationManagers\TaskDetailRelationManager;
+use App\Filament\Resources\TaskAplikasiResource\RelationManagers\ReportAplikasiRelationManagers;
+use App\Models\TaskAplikasi;
 
-class TaskResource extends Resource
+class TaskAplikasiResource extends Resource
 {
-    protected static ?string $model = Task::class;
+    protected static ?string $model = TaskAplikasi::class;
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = 'Proyek';
-    protected static ?string $navigationGroup = 'Pengolahan Arsip';
+    protected static ?string $navigationGroup = 'Proyek Aplikasi';
     protected static ?string $pluralLabel = 'Proyek';
-    protected static ?int $navigationSort = 1; // Menentukan urutan menu
+    protected static ?int $navigationSort = 2; // Menentukan urutan menu
 
-    public static function getRelations(): array
-    {
-        return [
-            TaskWeekOverviewRelationManager::class,
-            TaskDetailRelationManager::class,
+     public static function getRelations(): array
+     {
+         return [
+             ReportAplikasiRelationManagers::class,
         ];
-    }
+     }
 
     public static function form(Form $form): Form
     {
@@ -47,7 +45,7 @@ class TaskResource extends Resource
                 ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
                 ->options(
                     Marketing::where('status', 'Completed')
-                        ->where('jenis_pekerjaan', 'Pengolahan Arsip')
+                        ->where('jenis_pekerjaan', 'Aplikasi')
                         ->pluck('nama_pekerjaan', 'id')
                 )                
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -63,10 +61,10 @@ class TaskResource extends Resource
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);
                         //$set('jenis_arsip', $marketing->jenis_pekerjaan);
-                        $set('volume_arsip', $marketing->total_volume);
+                        $set('volume', $marketing->total_volume);
                         $set('no_telp_pm', auth()->user()->Telepon);
                         $set('status', 'Behind Schedule');
-                        $set('tahap_pengerjaan', 'Pemilahan');
+                        $set('tahap_pengerjaan', 'Requirement Gathering');
                         $set('project_manager', auth()->id());
 
                         // Panggil update target setelah marketing_id diubah
@@ -88,7 +86,8 @@ class TaskResource extends Resource
             Forms\Components\Select::make('tahap_pengerjaan')
                 ->label('Tahap Pengerjaan')
                 ->required()
-                ->options(\App\Models\JenisTask::pluck('nama_task', 'nama_task'))
+                ->disabled()
+                ->options(\App\Models\JenisTahapAplikasi::pluck('nama_task', 'nama_task'))
                 ->default(1),
 
             Forms\Components\Select::make('status')
@@ -171,18 +170,11 @@ class TaskResource extends Resource
                 ->label('Lokasi')
                 ->required(),
 
-            Forms\Components\TextInput::make('volume_arsip')
-                ->label('Volume Arsip (mL)')
-                ->prefix('mL ')
+            Forms\Components\TextInput::make('volume')
+                ->label('Volume')
+                ->prefix('Satuan')
                 ->numeric()
                 ->required(),
-            Forms\Components\TextInput::make('hasil_pemilahan')
-                ->label('Volume Arsip Pemilahan(mL)')
-                ->prefix('mL ')
-                ->hidden()
-                ->numeric()
-                ->required(),
-
             Forms\Components\Select::make('jenis_arsip')
                 ->label('Jenis Arsip')
                 ->options([
@@ -193,7 +185,7 @@ class TaskResource extends Resource
                 ->required(),
 
             Forms\Components\TextInput::make('target_perminggu')
-                ->label('Target Perminggu (mL)')
+                ->label('Target Perminggu ')
                 ->numeric()
                 ->disabled()
                 ->default(fn ($get) => static::calculateTargetPerminggu($get))
@@ -202,7 +194,7 @@ class TaskResource extends Resource
                 ->required(),
 
             Forms\Components\TextInput::make('target_perday')
-                ->label('Target Perhari (mL)')
+                ->label('Target Perhari')
                 ->numeric()
                 ->disabled()
                 ->default(fn ($get) => static::calculateTargetPerDay($get))
@@ -313,12 +305,8 @@ class TaskResource extends Resource
                     ->label('Lokasi')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('volume_arsip')
-                    ->label('Volume Arsip (mL)')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('hasil_pemilahan')
-                    ->label('Volume Arsip Pemilahan (mL)')
+                Tables\Columns\TextColumn::make('volume')
+                    ->label('Volume Arsip')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('jenis_arsip')
@@ -330,22 +318,22 @@ class TaskResource extends Resource
                     ->limit(50),
 
                 Tables\Columns\TextColumn::make('target_perminggu')
-                    ->label('Target Perminggu (mL)')
+                    ->label('Target Perminggu')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('target_perday')
-                    ->label('Target Perhari (mL)')
+                    ->label('Target Perhari')
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('lokasi')
                     ->label('Filter Lokasi')
                     ->searchable()
-                    ->options(fn () => Task::query()->distinct()->pluck('lokasi', 'lokasi')->toArray()),
+                    ->options(fn () => TaskAplikasi::query()->distinct()->pluck('lokasi', 'lokasi')->toArray()),
                 SelectFilter::make('pekerjaan')
                     ->label('Filter Pekerjaan')
                     ->searchable()
-                    ->options(fn () => Task::query()->distinct()->pluck('pekerjaan', 'pekerjaan')->toArray()),
+                    ->options(fn () => TaskAplikasi::query()->distinct()->pluck('pekerjaan', 'pekerjaan')->toArray()),
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
@@ -395,15 +383,15 @@ class TaskResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTasks::route('/'),
-            'create' => Pages\CreateTask::route('/create'),
-            'edit' => Pages\EditTask::route('/{record}/edit'),
+            'index' => Pages\ListTaskAplikasis::route('/'),
+            'create' => Pages\CreateTaskAplikasi::route('/create'),
+            'edit' => Pages\EditTaskAplikasi::route('/{record}/edit'),
         ];
     }
 
     public static function calculateTargetPerminggu($get)
     {
-        $volumeArsip = (float) $get('volume_arsip');
+        $volumeArsip = (float) $get('volume');
         $durasiProyek = (int) $get('durasi_proyek');
 
         if ($durasiProyek <= 0) {
@@ -415,7 +403,7 @@ class TaskResource extends Resource
 
     public static function calculateTargetPerDay($get)
     {
-        $volumeArsip = (float) $get('volume_arsip');
+        $volumeArsip = (float) $get('volume');
         $lamaPekerjaan = (int) $get('lama_pekerjaan');
 
         if ($lamaPekerjaan <= 0) {
@@ -436,9 +424,9 @@ class TaskResource extends Resource
     /**
      * Override metode create untuk mengubah status marketing menjadi "on hold"
      */
-    public static function create(array $data): Task
+    public static function create(array $data): TaskAplikasi
     {
-        $task = Task::create($data);
+        $taskaplikasi = TaskAplikasi::create($data);
 
         // Update status marketing menjadi "On Hold" dan log status
         Log::info('Updating marketing status to On Hold for marketing_id: ' . $data['marketing_id']);
@@ -450,13 +438,13 @@ class TaskResource extends Resource
             }
         }
 
-        return $task;
+        return $taskaplikasi;
     }
 
     /**
      * Override metode update untuk mengubah status marketing menjadi "on hold"
      */
-    public static function update(array $data, Task $record): Task
+    public static function update(array $data, TaskAplikasi $record): TaskAplikasi
     {
         $record->update($data);
 

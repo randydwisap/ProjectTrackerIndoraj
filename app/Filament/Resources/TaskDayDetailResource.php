@@ -18,9 +18,9 @@ class TaskDayDetailResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationGroup = 'Manajemen Tugas';
+    protected static ?string $navigationGroup = 'Pengolahan Arsip';
 
-    protected static ?string $navigationLabel = 'Laporan Harian Tugas';
+    protected static ?string $navigationLabel = 'Laporan Harian';
 
     protected static ?int $navigationSort = 3; // Menentukan urutan menu
 

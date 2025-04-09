@@ -17,10 +17,11 @@ class JenisTaskResource extends Resource
 {
     protected static ?string $model = JenisTask::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-currency-rupee';
-    protected static ?string $navigationGroup = 'Manajemen Tugas';
+    protected static ?string $navigationIcon = 'heroicon-o-document-duplicate';
+    protected static ?string $navigationGroup = 'Pengolahan Arsip';
+    protected static ?string $pluralLabel = 'Master Tahapan Proyek';
         // Updated navigation label
-        protected static ?string $navigationLabel = 'Master Jenis Task';
+        protected static ?string $navigationLabel = 'Master Tahapan Proyek';
         protected static ?int $navigationSort = 5; // Menentukan urutan menu
 
     public static function form(Form $form): Form

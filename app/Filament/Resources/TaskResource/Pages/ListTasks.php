@@ -14,7 +14,7 @@ class ListTasks extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Tambah Tugas'), // Memindahkan ->label() ke baris yang sama
+                ->label('Tambah Proyek'), // Memindahkan ->label() ke baris yang sama
         ];
     }    
 }

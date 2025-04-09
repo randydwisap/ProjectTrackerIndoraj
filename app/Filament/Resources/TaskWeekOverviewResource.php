@@ -17,8 +17,8 @@ class TaskWeekOverviewResource extends Resource
 {
     protected static ?string $model = TaskWeekOverview::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Manajemen Tugas';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static ?string $navigationGroup = 'Pengolahan Arsip';
     protected static ?string $navigationLabel = 'Rekap Mingguan';
     protected static ?int $navigationSort = 4; // Menentukan urutan menu
 

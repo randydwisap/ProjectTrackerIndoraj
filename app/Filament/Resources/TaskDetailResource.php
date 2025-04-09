@@ -18,7 +18,7 @@ class TaskDetailResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Manajemen Tugas';
+    protected static ?string $navigationGroup = 'Pengolahan Arsip';
     protected static ?int $navigationSort = 2; // Menentukan urutan menu
     // Updated navigation label
     protected static ?string $navigationLabel = 'Laporan Mingguan';

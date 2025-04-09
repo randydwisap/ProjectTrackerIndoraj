@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property string $password
  * @method save()
+ * @method bool hasRole(string $role)
+ * @method bool hasAnyRole(array|string ...$roles)
+ * @method \Spatie\Permission\Models\Role[] getRoleNames()
  */
 class User extends Authenticatable
 {
