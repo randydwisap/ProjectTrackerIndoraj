@@ -3,11 +3,11 @@
 namespace App\Filament\Widgets;
 
 use Filament\Widgets\ChartWidget;
-use App\Models\Task;
+use App\Models\TaskFumigasi;
 
-class TaskStatusChartWidget extends ChartWidget
+class FumigasiStatusChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Pengolahan Arsip'; // Judul Widget
+    protected static ?string $heading = 'Fumigasi'; // Judul Widget
     protected static ?int $sort = 2; // Urutan di dashboard
     protected static ?string $maxHeight = '300px'; // Atur tinggi chart
 
@@ -19,9 +19,9 @@ class TaskStatusChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $completed = Task::where('status', 'Completed')->count();
-        $behindSchedule = Task::where('status', 'Behind Schedule')->count();
-        $farBehindSchedule = Task::where('status', 'Far Behind Schedule')->count();
+        $completed = TaskFumigasi::where('status', 'Completed')->count();
+        $behindSchedule = TaskFumigasi::where('status', 'Behind Schedule')->count();
+        $farBehindSchedule = TaskFumigasi::where('status', 'Far Behind Schedule')->count();
 
         return [
             'labels' => ['Completed', 'Behind Schedule', 'Far Behind Schedule'],

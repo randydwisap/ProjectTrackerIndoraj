@@ -55,7 +55,7 @@ class TaskAplikasiResource extends Resource
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
                         $set('lokasi', $marketing->lokasi);
-                        $set('tahap_pengerjaan', $marketing->tahap_pengerjaan);
+                        //$set('tahap_pengerjaan', $marketing->tahap_pengerjaan);
                         $set('tgl_mulai', $marketing->tgl_mulai);
                         $set('tgl_selesai', $marketing->tgl_selesai);
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
@@ -88,7 +88,8 @@ class TaskAplikasiResource extends Resource
                 ->required()
                 ->disabled()
                 ->options(\App\Models\JenisTahapAplikasi::pluck('nama_task', 'nama_task'))
-                ->default(1),
+                ->default('Requirement Gathering') // Sesuaikan default yang valid
+                ->dehydrated(true), // Pastikan nilai ini ikut dikirim saat submit
 
             Forms\Components\Select::make('status')
                 ->label('Status')
@@ -174,14 +175,6 @@ class TaskAplikasiResource extends Resource
                 ->label('Volume')
                 ->prefix('Satuan')
                 ->numeric()
-                ->required(),
-            Forms\Components\Select::make('jenis_arsip')
-                ->label('Jenis Arsip')
-                ->options([
-                    'Aktif' => 'Aktif',
-                    'Inaktif' => 'Inaktif',
-                    'Campuran' => 'Campuran',
-                ])
                 ->required(),
 
             Forms\Components\TextInput::make('target_perminggu')
@@ -306,12 +299,9 @@ class TaskAplikasiResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('volume')
-                    ->label('Volume Arsip')
+                    ->label('Volume')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('jenis_arsip')
-                    ->label('Jenis Arsip')
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('deskripsi_pekerjaan')
                     ->label('Deskripsi Pekerjaan')

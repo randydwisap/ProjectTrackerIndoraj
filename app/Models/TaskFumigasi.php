@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
-class TaskAplikasi extends Model
+class TaskFumigasi extends Model
 {
     use HasFactory;
-
     protected $fillable = [
         'pekerjaan',
         'klien',
@@ -34,9 +33,8 @@ class TaskAplikasi extends Model
         'telepon',
         'marketing_id',
     ];
-
-    // Ubah `pelaksana` menjadi array secara otomatis
-    protected $casts = [
+       // Ubah `pelaksana` menjadi array secara otomatis
+       protected $casts = [
         'pelaksana' => 'array',
     ];
 
@@ -45,6 +43,7 @@ class TaskAplikasi extends Model
         return $this->belongsTo(User::class, 'project_manager'); // Relasi ke User
     }
     
+
     protected static function boot()
     {
         parent::boot();
@@ -70,10 +69,6 @@ class TaskAplikasi extends Model
             $durasiProyek = $taskaplikasi->durasi_proyek;
         });
     }
-
-    /**
-     * Menghitung durasi proyek dalam minggu dan lama pekerjaan dalam hari.
-     */
     public function hitungDurasiDanLamaPekerjaan()
     {
         if ($this->tgl_mulai && $this->tgl_selesai) {
@@ -90,22 +85,18 @@ class TaskAplikasi extends Model
             $this->durasi_proyek = 0;
         }
     }
-    public function taskaplikasi()
-{
-    return $this->belongsTo(TaskAplikasi::class);
-}
-public function jenistahapaplikasi()
-{
-    return $this->hasMany(JenisTahapAplikasi::class);
-}
-public function reportaplikasi()
-{
-    return $this->hasMany(ReportAplikasi::class);
-}
-public function marketing()
-{
+
+    public function taskfumigasi()
+    {
+    return $this->belongsTo(TaskFumigasi::class);
+    }
+
+    public function jenistahapfumigasi()
+    {
+        return $this->hasMany(JenisTahapAplikasi::class);
+    }
+    public function marketing()
+    {
     return $this->belongsTo(Marketing::class);
-}
-
-
+    }
 }

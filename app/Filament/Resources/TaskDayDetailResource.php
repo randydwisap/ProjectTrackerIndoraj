@@ -25,46 +25,70 @@ class TaskDayDetailResource extends Resource
     protected static ?int $navigationSort = 3; // Menentukan urutan menu
 
     public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('task_id')
-                    ->relationship('task', 'pekerjaan')
-                    ->required()
-                    ->reactive()
-                    ->afterStateUpdated(function (callable $set) {
-                        $set('task_detail_id', null); // Reset task_detail_id when task_id changes
-                    }),
-                Forms\Components\Select::make('task_detail_id')
-                    ->relationship('taskDetail', function ($query) {
-                        $query->with('jenisTask'); // Eager load jenisTask
-                    })
-                    ->required()
-                    ->reactive()
-                    ->options(function (callable $get) {
-                        return TaskDetail::where('task_id', $get('task_id'))
-                            ->with('jenisTask') // Eager load the jenisTask relationship
-                            ->get()
-                            ->mapWithKeys(function ($taskDetail) {
-                                return [$taskDetail->id => "{$taskDetail->nama_week} | {$taskDetail->jenisTask->nama_task}"];
-                            });
-                    }),
+{
+    return $form
+        ->schema([
+            Forms\Components\Select::make('task_id')
+                ->relationship('task', 'pekerjaan')
+                ->required()
+                ->reactive()
+                ->afterStateUpdated(function (callable $set) {
+                    $set('task_detail_id', null);
+                    $set('nama_week', null);
+                    $set('jenis_task_id', null);
+                }),
 
-                Forms\Components\Hidden::make('jenis_task_id'), // Disembunyikan karena di-set otomatis
-                Forms\Components\Select::make('tanggal') // Updated to map to 'tanggal'
-                    ->label('Pilih Hari')
-                    ->options([
-                        'Day 1' => 'Day 1',
-                        'Day 2' => 'Day 2',
-                        'Day 3' => 'Day 3',
-                        'Day 4' => 'Day 4',
-                        'Day 5' => 'Day 5',
-                        'Day 6' => 'Day 6',
-                    ])
-                    ->required(),
-                Forms\Components\TextInput::make('output')->numeric()->required(),     
-                Forms\Components\TextInput::make('hasil')->numeric(),               
-                Forms\Components\Select::make('status')
+            // ✅ Select Nama Week
+            Forms\Components\Select::make('nama_week')
+            ->label('Nama Week')
+            ->reactive()
+            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get))
+            ->options(function (callable $get) {
+                return \App\Models\TaskDetail::where('task_id', $get('task_id'))
+                    ->pluck('nama_week', 'nama_week')
+                    ->toArray();
+            })
+            ->afterStateHydrated(function ($set, $record) {
+                $set('nama_week', $record?->taskDetail?->nama_week);
+            }),        
+        
+            // ✅ Select Jenis Task
+            Forms\Components\Select::make('jenis_task_id')
+            ->label('Jenis Tahapan')
+            ->reactive()
+            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get))
+            ->options(function (callable $get) {
+                return \App\Models\TaskDetail::where('task_id', $get('task_id'))
+                    ->with('jenisTask')
+                    ->get()
+                    ->pluck('jenisTask.nama_task', 'jenis_task_id')
+                    ->unique();
+            }),
+
+            // ✅ Hidden task_detail_id (auto-filled)
+            Forms\Components\Hidden::make('task_detail_id')
+            ->required()
+            ->dehydrated(true) // <-- PENTING
+            ->reactive()
+            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get)) // Tambahkan ini
+            ->afterStateHydrated(fn ($set, $get) => static::resolveTaskDetailId($set, $get)),
+        
+            Forms\Components\Select::make('tanggal')
+                ->label('Pilih Hari')
+                ->options([
+                    'Day 1' => 'Day 1',
+                    'Day 2' => 'Day 2',
+                    'Day 3' => 'Day 3',
+                    'Day 4' => 'Day 4',
+                    'Day 5' => 'Day 5',
+                    'Day 6' => 'Day 6',
+                ])
+                ->required(),
+
+            Forms\Components\TextInput::make('output')->numeric()->required(),
+            Forms\Components\TextInput::make('hasil')->numeric(),
+
+            Forms\Components\Select::make('status')
                 ->label('Status')
                 ->options([
                     'On Track' => 'On Track',
@@ -74,8 +98,25 @@ class TaskDayDetailResource extends Resource
                 ])
                 ->disabled()
                 ->default('On Track'),
-            ]);
+        ]);
+}
+protected static function resolveTaskDetailId(callable $set, callable $get): void
+{
+    $taskId = $get('task_id');
+    $namaWeek = $get('nama_week');
+    $jenisTaskId = $get('jenis_task_id');
+
+    if ($taskId && $namaWeek && $jenisTaskId) {
+        $taskDetail = \App\Models\TaskDetail::where('task_id', $taskId)
+            ->where('nama_week', $namaWeek)
+            ->where('jenis_task_id', $jenisTaskId)
+            ->first();
+
+        $set('task_detail_id', $taskDetail?->id);
     }
+}
+
+
 
     public static function table(Table $table): Table
     {
