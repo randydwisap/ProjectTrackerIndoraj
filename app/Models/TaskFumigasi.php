@@ -99,4 +99,9 @@ class TaskFumigasi extends Model
     {
     return $this->belongsTo(Marketing::class);
     }
+
+    public function reportfumigasi()
+{
+    return $this->hasMany(ReportFumigasi::class);
+}
 }

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TaskFumigasiResource\Pages;
-use App\Filament\Resources\TaskFumigasiResource\RelationManagers;
+use App\Filament\Resources\TaskFumigasiResource\RelationManagers\ReportFumigasiRelationManagers;
 use App\Models\TaskFumigasi;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,6 +27,14 @@ class TaskFumigasiResource extends Resource
     protected static ?string $navigationGroup = 'Pengolahan Fumigasi';
     protected static ?string $pluralLabel = 'Proyek';
     protected static ?int $navigationSort = 1; // Menentukan urutan menu
+
+    public static function getRelations(): array
+    {
+        return [
+            ReportFumigasiRelationManagers::class,
+       ];
+    }
+
 
     public static function form(Form $form): Form
     {
@@ -324,13 +332,6 @@ class TaskFumigasiResource extends Resource
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
