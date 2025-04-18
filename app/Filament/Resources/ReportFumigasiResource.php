@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ReportfumigasiResource\Pages;
-use App\Filament\Resources\ReportfumigasiResource\RelationManagers;
-use App\Models\Reportfumigasi;
+use App\Filament\Resources\ReportFumigasiResource\Pages;
+use App\Filament\Resources\ReportFumigasiResource\RelationManagers;
+use App\Models\ReportFumigasi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ReportfumigasiResource extends Resource
 {
-    protected static ?string $model = Reportfumigasi::class;
+    protected static ?string $model = ReportFumigasi::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = 'Report Harian';
