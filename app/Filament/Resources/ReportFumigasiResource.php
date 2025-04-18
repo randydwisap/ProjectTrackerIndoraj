@@ -18,7 +18,7 @@ class ReportfumigasiResource extends Resource
     protected static ?string $model = Reportfumigasi::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
-    protected static ?string $navigationLabel = 'Report';
+    protected static ?string $navigationLabel = 'Report Harian';
     protected static ?string $navigationGroup = 'Pengolahan Fumigasi';
     protected static ?string $pluralLabel = 'Report';
     protected static ?int $navigationSort = 3; // Menentukan urutan menu
