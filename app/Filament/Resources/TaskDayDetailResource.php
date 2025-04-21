@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TaskDayDetailResource\Pages;
 use App\Filament\Resources\TaskDayDetailResource\RelationManagers;
 use App\Models\TaskDayDetail;
-use App\Models\TaskDetail; // Ensure TaskDetail is imported
+use App\Models\TaskWeekOverview;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -33,46 +33,27 @@ class TaskDayDetailResource extends Resource
                 ->required()
                 ->reactive()
                 ->afterStateUpdated(function (callable $set) {
-                    $set('task_detail_id', null);
+                    $set('task_week_overview_id', null);
                     $set('nama_week', null);
                     $set('jenis_task_id', null);
                 }),
-
-            // ✅ Select Nama Week
-            Forms\Components\Select::make('nama_week')
-            ->label('Nama Week')
-            ->reactive()
-            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get))
-            ->options(function (callable $get) {
-                return \App\Models\TaskDetail::where('task_id', $get('task_id'))
-                    ->pluck('nama_week', 'nama_week')
-                    ->toArray();
-            })
-            ->afterStateHydrated(function ($set, $record) {
-                $set('nama_week', $record?->taskDetail?->nama_week);
-            }),        
+            Forms\Components\Select::make('task_week_overview_id')
+                ->label('Nama Week')
+                ->relationship('taskWeekOverview', 'nama_week', fn ($query, $get) => 
+                    $query->where('task_id', $get('task_id'))
+                )
+                ->required(),             
         
             // ✅ Select Jenis Task
             Forms\Components\Select::make('jenis_task_id')
             ->label('Jenis Tahapan')
-            ->reactive()
-            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get))
-            ->options(function (callable $get) {
-                return \App\Models\TaskDetail::where('task_id', $get('task_id'))
-                    ->with('jenisTask')
-                    ->get()
-                    ->pluck('jenisTask.nama_task', 'jenis_task_id')
-                    ->unique();
-            }),
+            ->reactive()            
+            ->options(function () {
+                return \App\Models\JenisTask::all()
+                    ->pluck('nama_task', 'id') // id sebagai value, nama_task sebagai label
+                    ->toArray();
+            }),        
 
-            // ✅ Hidden task_detail_id (auto-filled)
-            Forms\Components\Hidden::make('task_detail_id')
-            ->required()
-            ->dehydrated(true) // <-- PENTING
-            ->reactive()
-            ->afterStateUpdated(fn ($set, $get) => static::resolveTaskDetailId($set, $get)) // Tambahkan ini
-            ->afterStateHydrated(fn ($set, $get) => static::resolveTaskDetailId($set, $get)),
-        
             Forms\Components\Select::make('tanggal')
                 ->label('Pilih Hari')
                 ->options([
@@ -85,10 +66,53 @@ class TaskDayDetailResource extends Resource
                 ])
                 ->required(),
 
-            Forms\Components\TextInput::make('output')->numeric()->required(),
-            Forms\Components\TextInput::make('hasil')->numeric(),
-
-            Forms\Components\Select::make('status')
+                Forms\Components\TextInput::make('output')
+                ->numeric()
+                ->required()
+                ->label('Volume Dikerjakan')
+                ->reactive()
+                ->afterStateUpdated(function ($set, $get) {
+                    // 1. Hitung hasil_inarsip = output - hasil
+                    $output = (float) ($get('output') ?: 0);
+                    $hasil = (float) ($get('hasil') ?: 0);
+                    $set('hasil_inarsip', $output - $hasil);
+            
+                    // 2. Update status berdasarkan target_perday
+                    $taskId = $get('task_id');
+                    $task = \App\Models\Task::find($taskId);
+                    $targetPerDay = (float) ($task?->target_perday ?? 0);
+            
+                    if ($targetPerDay > 0) {
+                        $percent = ($output / $targetPerDay) * 100;
+            
+                        if ($percent >= 100) {
+                            $status = 'On Track';
+                        } elseif ($percent > 50) {
+                            $status = 'Behind Schedule';
+                        } else {
+                            $status = 'Far Behind Schedule';
+                        }
+            
+                        $set('status', $status);
+                    } else {
+                        $set('status', 'On Track'); // default kalau gak ada target
+                    }
+                }),            
+            
+            Forms\Components\TextInput::make('hasil')
+                ->numeric()
+                ->label('Hasil Arsip')
+                ->reactive()
+                ->afterStateUpdated(fn ($set, $get) =>
+                    $set('hasil_inarsip', (float) ($get('output') ?: 0) - (float) ($get('hasil') ?: 0))
+                ),
+            
+            Forms\Components\TextInput::make('hasil_inarsip')
+                ->numeric()
+                ->label('Hasil Inarsip')
+                ->readOnly(),
+            
+                Forms\Components\Select::make('status')
                 ->label('Status')
                 ->options([
                     'On Track' => 'On Track',
@@ -107,7 +131,7 @@ protected static function resolveTaskDetailId(callable $set, callable $get): voi
     $jenisTaskId = $get('jenis_task_id');
 
     if ($taskId && $namaWeek && $jenisTaskId) {
-        $taskDetail = \App\Models\TaskDetail::where('task_id', $taskId)
+        $taskDetail = \App\Models\TaskWeekOverview::where('task_id', $taskId)
             ->where('nama_week', $namaWeek)
             ->where('jenis_task_id', $jenisTaskId)
             ->first();
@@ -115,7 +139,6 @@ protected static function resolveTaskDetailId(callable $set, callable $get): voi
         $set('task_detail_id', $taskDetail?->id);
     }
 }
-
 
 
     public static function table(Table $table): Table
@@ -127,26 +150,32 @@ protected static function resolveTaskDetailId(callable $set, callable $get): voi
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('taskDetail.nama_week') // Display nama_task from jenis_task
+                Tables\Columns\TextColumn::make('taskWeekOverview.nama_week') // Display nama_task from jenis_task
                     ->label('Week')
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('taskDetail.jenisTask.nama_task') // Display nama_task from jenis_task
+                Tables\Columns\TextColumn::make('jenisTask.nama_task') // ✅
                     ->label('Nama Tahapan')
                     ->sortable()
                     ->searchable(),
-
+                
                 Tables\Columns\TextColumn::make('tanggal')
                     ->label('Hari')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('output')
-                    ->label('Volume')
+                    ->label('Dikerjakan')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('hasil')
+                    ->label('Arsip')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('hasil_inarsip')
+                    ->label('Inarsip')
                     ->sortable(),
 
-                    Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->sortable()

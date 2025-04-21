@@ -9,8 +9,13 @@ class JenisTask extends Model
 {
     protected $fillable = ['nama_task'];
 
-    public function taskDetails()
+    public function taskWeekOverviews()
     {
-        return $this->hasMany(TaskDetail::class);
+        return $this->hasMany(TaskWeekOverview::class);
+    }
+    
+    public function taskDayDetails()
+    {
+        return $this->hasMany(TaskDayDetail::class);
     }
 }

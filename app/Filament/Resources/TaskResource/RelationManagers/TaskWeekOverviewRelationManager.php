@@ -11,38 +11,72 @@ use App\Models\TaskWeekOverview;
 class TaskWeekOverviewRelationManager extends RelationManager
 {
     protected static string $relationship = 'taskWeekOverviews';
+    protected static ?string $title = 'Rekap Mingguan'; // Judul header
+    protected static ?string $navigationLabel = 'Rekap Mingguan';
 
     public function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_week')
-                    ->label('Minggu Ke')
-                    ->sortable(),
-                    Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('task.pekerjaan') // Display task.pekerjaan instead of task_id
+                ->label('Nama Task')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('nama_week') // Display nama_task from jenis_task
+                ->label('Week')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('volume_dikerjakan') // Display nama_task from jenis_task
+                ->label('Dikerjakan')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('arsip') // Display nama_task from jenis_task
+                ->label('Arsip')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('inarsip') // Display nama_task from jenis_task
+                ->label('Inarsip')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('total_step1') // Display nama_task from jenis_task
+                ->label('Pemilahan dan Identifikasi')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('total_step2') // Display nama_task from jenis_task
+                ->label('Manuver dan Pemberkasan')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('total_step3') // Display nama_task from jenis_task
+                ->label('Input Data')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('total_step4') // Display nama_task from jenis_task
+                ->label('Pelabelan dan Penataan')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->sortable()
                     ->color(fn ($state) => match ($state) {
-                        'On Track' => 'success',
-                        'Behind Schedule' => 'warning',
-                        'Far Behind Schedule' => 'danger',
-                        'Completed' => 'success',
+                        'On Track' => 'success', // Hijau
+                        'Behind Schedule' => 'warning', // Kuning
+                        'Far Behind Schedule' => 'danger', // Merah
+                        'Completed' => 'success', // hijau
                         'Not Started' => 'gray',
                         default => 'secondary',
                     }),
-
                 Tables\Columns\TextColumn::make('resiko_keterlambatan')
-                    ->label('Keterlambatan')
-                    ->badge()
-                    ->sortable()
-                    ->color(fn ($state) => match ($state) {
-                        'Low' => 'success',
-                        'Moderate' => 'warning',
-                        'High' => 'danger',
-                        'Completed' => 'success',
-                        default => 'secondary',
-                    }),
+                ->label('Keterlambatan')
+                ->badge()
+                ->sortable()
+                ->color(fn ($state) => match ($state) {
+                    'Low' => 'success',
+                    'Moderate' => 'warning',
+                    'High' => 'danger',
+                    'Completed' => 'gray',
+                    default => 'secondary',
+                }),
             ])
             ->filters([])
             ->headerActions([])

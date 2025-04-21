@@ -16,7 +16,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
 use App\Models\Marketing;
 use App\Filament\Resources\TaskResource\RelationManagers\TaskWeekOverviewRelationManager;
-use App\Filament\Resources\TaskResource\RelationManagers\TaskDetailRelationManager;
+use App\Filament\Resources\TaskResource\RelationManagers\TaskDayDetailRelationManager;
 
 class TaskResource extends Resource
 {
@@ -30,8 +30,8 @@ class TaskResource extends Resource
     public static function getRelations(): array
     {
         return [
-            TaskWeekOverviewRelationManager::class,
-            TaskDetailRelationManager::class,
+            TaskWeekOverviewRelationManager::class,  
+            TaskDayDetailRelationManager::class,            
         ];
     }
 
@@ -315,11 +315,31 @@ class TaskResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('volume_arsip')
-                    ->label('Volume Arsip (mL)')
+                    ->label('Total Volume (mL)')
+                    ->sortable(),
+                
+                Tables\Columns\TextColumn::make('volume_dikerjakan')
+                    ->label('Volume Dikerjakan (mL)')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('dikerjakan_step1')
+                    ->label('Volume Tahap 1 (mL)')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('dikerjakan_step2')
+                    ->label('Volume Tahap 2 (mL)')
+                    ->sortable(),
+                
+                Tables\Columns\TextColumn::make('dikerjakan_step3')
+                    ->label('Volume Tahap 3 (mL)')
+                    ->sortable(),
+                
+                Tables\Columns\TextColumn::make('dikerjakan_step4')
+                    ->label('Volume Tahap 4 (mL)')
+                    ->sortable(),      
+
                 Tables\Columns\TextColumn::make('hasil_pemilahan')
-                    ->label('Volume Arsip Pemilahan (mL)')
+                    ->label('Hasil Volume Arsip (mL)')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('jenis_arsip')
@@ -333,9 +353,17 @@ class TaskResource extends Resource
                 Tables\Columns\TextColumn::make('target_perminggu')
                     ->label('Target Perminggu (mL)')
                     ->sortable(),
+                
+                Tables\Columns\TextColumn::make('target_perminggu_arsip')
+                    ->label('Target Perminggu Arsip (mL)')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('target_perday')
                     ->label('Target Perhari (mL)')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('target_perday_arsip')
+                    ->label('Target Perhari Arsip (mL)')
                     ->sortable(),
             ])
             ->filters([
