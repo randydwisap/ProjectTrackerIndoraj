@@ -64,7 +64,8 @@ class Task extends Model
             $task->hitungTargetPerMingguArsip();
             $task->hitungStatus();
             $task->hitungResiko();  
-            $task->hitungTotalStep();            
+            $task->hitungTotalStep();   
+            $task->hitungTahap();
         });
 
         static::updating(function ($task) {
@@ -74,6 +75,7 @@ class Task extends Model
             $task->hitungStatus();
             $task->hitungResiko(); 
             $task->hitungTotalStep();     
+            $task->hitungTahap();
         });
 
         static::created(function ($task) {
@@ -152,7 +154,11 @@ public function hitungTargetPerMingguArsip()
 
 public function hitungStatus()
 {
-    if ($this->dikerjakan_step4 >= $this->hasil_pemilahan) {
+    if (
+    $this->dikerjakan_step4 >= $this->hasil_pemilahan &&
+    $this->dikerjakan_step4 != 0 &&
+    $this->hasil_pemilahan != 0
+) {
         $this->status = 'Completed';
     } elseif ($this->volume_arsip > 0) {
         $persentase = ($this->volume_dikerjakan / $this->volume_arsip) * 100;
@@ -164,6 +170,19 @@ public function hitungStatus()
         }
     } else {
         $this->status = 'Not Started';
+    }
+}
+
+public function hitungTahap()
+{
+    if ($this->dikerjakan_step4 > 0) {
+        $this->tahap_pengerjaan = 'Pelabelan dan Penataan';
+    } elseif ($this->dikerjakan_step3 > 0) {
+        $this->tahap_pengerjaan = 'Input Data';
+    } elseif ($this->dikerjakan_step2 > 0) {
+        $this->tahap_pengerjaan = 'Manuver dan Pemberkasan';
+    } else {
+        $this->tahap_pengerjaan = 'Pemilahan dan Identifikasi';
     }
 }
 
