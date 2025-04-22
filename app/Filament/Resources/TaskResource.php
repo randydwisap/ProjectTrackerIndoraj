@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use IbrahimBougaoua\FilaProgress\Tables\Columns\ProgressBar;
 use Filament\Tables\Columns\TextColumn;
 use App\Models\Task;
 use Filament\Forms;
@@ -322,21 +323,53 @@ class TaskResource extends Resource
                     ->label('Volume Dikerjakan (mL)')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('dikerjakan_step1')
-                    ->label('Volume Tahap 1 (mL)')
-                    ->sortable(),
+                ProgressBar::make('dikerjakan_step1')
+                ->label('Pemilahan & Identifikasi (mL)')
+                    ->getStateUsing(function ($record) {
+                        $total = $record->volume_arsip;
+                        $progress = $record->dikerjakan_step1;
+                        return [
+                            'total' => $total,
+                            'progress' => $progress,
+                        ];
+                    })
+                    ->extraAttributes(['class' => 'progress-bar-hidden']),
 
-                Tables\Columns\TextColumn::make('dikerjakan_step2')
-                    ->label('Volume Tahap 2 (mL)')
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('dikerjakan_step3')
-                    ->label('Volume Tahap 3 (mL)')
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('dikerjakan_step4')
-                    ->label('Volume Tahap 4 (mL)')
-                    ->sortable(),      
+                ProgressBar::make('dikerjakan_step2')
+                    ->label('Manuver dan Pemberkasan (mL)')
+                    ->getStateUsing(function ($record) {
+                        $total = $record->hasil_pemilahan;
+                        $progress = $record->dikerjakan_step2;
+                        return [
+                            'total' => $total,
+                            'progress' => $progress,
+                        ];
+                    })
+                    ->extraAttributes(['class' => 'progress-bar-hidden']),
+
+                ProgressBar::make('dikerjakan_step3')
+                    ->label('Input Data (mL)')
+                    ->getStateUsing(function ($record) {
+                        $total = $record->hasil_pemilahan;
+                        $progress = $record->dikerjakan_step3;
+                        return [
+                            'total' => $total,
+                            'progress' => $progress,
+                        ];
+                    })
+                    ->extraAttributes(['class' => 'progress-bar-hidden']),
+
+                ProgressBar::make('dikerjakan_step4')
+                    ->label('Pelabelan dan Penataan (mL)')
+                    ->getStateUsing(function ($record) {
+                        $total = $record->hasil_pemilahan;
+                        $progress = $record->dikerjakan_step4;
+                        return [
+                            'total' => $total,
+                            'progress' => $progress,
+                        ];
+                    })
+                    ->extraAttributes(['class' => 'progress-bar-hidden']),
 
                 Tables\Columns\TextColumn::make('hasil_pemilahan')
                     ->label('Hasil Volume Arsip (mL)')

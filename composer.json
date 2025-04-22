@@ -10,6 +10,7 @@
         "blade-ui-kit/blade-heroicons": "^2.6",
         "filament/filament": "^3.3",
         "guzzlehttp/guzzle": "^7.2",
+        "ibrahim-bougaoua/filaprogress": "^0.1.0",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
