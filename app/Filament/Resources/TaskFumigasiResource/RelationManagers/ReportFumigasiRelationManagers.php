@@ -72,15 +72,15 @@ class ReportFumigasiRelationManagers extends RelationManager
     }
     public static function getLampiranUrl($record): string
     {
-        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
-        return asset('storage/' . $record->lampiran);
+        return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        //return asset('storage/' . $record->lampiran);
     }
 
     public static function getDokumentasiFotoUrls($record): array
     {
         return array_map(function ($gambar) {
-            //return asset('ProjectTrackerIndoraj/storage/app/public/' . $foto);
-            return asset('storage/' . $gambar);
+            return asset('ProjectTrackerIndoraj/storage/app/public/' . $gambar);
+            //return asset('storage/' . $gambar);
         }, $record->gambar);
     }
     public function table(Table $table): Table
