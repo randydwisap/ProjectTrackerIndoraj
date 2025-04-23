@@ -7,6 +7,7 @@ use App\Filament\Resources\TaskDayDetailResource\RelationManagers;
 use App\Models\TaskDayDetail;
 use App\Models\TaskWeekOverview;
 use Filament\Forms;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -188,7 +189,27 @@ protected static function resolveTaskDetailId(callable $set, callable $get): voi
                     }),
             ])
             ->filters([
-                //
+                SelectFilter::make('task_id')
+                ->label('Filter Pekerjaan')
+                ->searchable()
+                ->options(fn () => \App\Models\Task::pluck('pekerjaan', 'id')->toArray()),
+                SelectFilter::make('task_week_overview_id')
+                ->label('Filter Week')
+                ->searchable()
+                ->options(fn () => \App\Models\TaskWeekOverview::pluck('nama_week', 'id')->toArray()),
+                SelectFilter::make('jenis_task_id')
+                ->label('Filter Tahap')
+                ->searchable()
+                ->options(fn () => \App\Models\JenisTask::pluck('nama_task', 'id')->toArray()),
+                SelectFilter::make('status')
+                    ->label('Filter Status')
+                    ->searchable()
+                    ->options(fn () => TaskDayDetail::query()->distinct()->pluck('status', 'status')->toArray()),
+                SelectFilter::make('tanggal')
+                    ->label('Filter Tanggal')
+                    ->searchable()
+                    ->options(fn () => TaskDayDetail::query()->distinct()->pluck('tanggal', 'tanggal')->toArray()),
+                
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

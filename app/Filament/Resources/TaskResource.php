@@ -408,6 +408,27 @@ class TaskResource extends Resource
                     ->label('Filter Pekerjaan')
                     ->searchable()
                     ->options(fn () => Task::query()->distinct()->pluck('pekerjaan', 'pekerjaan')->toArray()),
+                SelectFilter::make('status')
+                    ->label('Filter Status')
+                    ->searchable()
+                    ->options(fn () => Task::query()->distinct()->pluck('status', 'status')->toArray()),
+                SelectFilter::make('resiko_keterlambatan')
+                    ->label('Filter Resiko')
+                    ->searchable()
+                    ->options(fn () => Task::query()->distinct()->pluck('resiko_keterlambatan', 'resiko_keterlambatan')->toArray()),
+                SelectFilter::make('tahap_pengerjaan')
+                    ->label('Filter Tahap')
+                    ->searchable()
+                    ->options(fn () => Task::query()->distinct()->pluck('tahap_pengerjaan', 'tahap_pengerjaan')->toArray()),
+                SelectFilter::make('project_manager')
+                    ->label('Filter PM')
+                    ->searchable()
+                    ->options(fn () => \App\Models\User::pluck('name', 'id')->toArray()),
+                SelectFilter::make('jenis_arsip')
+                    ->label('Filter Jenis Arsip')
+                    ->searchable()
+                    ->options(fn () => Task::query()->distinct()->pluck('jenis_arsip', 'jenis_arsip')->toArray()),
+                
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use App\Filament\Resources\TaskWeekOverviewResource\RelationManagers\TaskDayDetailRelationManager;
@@ -126,6 +127,25 @@ class TaskWeekOverviewResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->filters([
+                SelectFilter::make('task_id')
+                    ->label('Filter Pekerjaan')
+                    ->searchable()
+                    ->options(fn () => \App\Models\Task::pluck('pekerjaan', 'id')->toArray()),
+                SelectFilter::make('status')
+                    ->label('Filter Status')
+                    ->searchable()
+                    ->options(fn () => TaskWeekOverview::query()->distinct()->pluck('status', 'status')->toArray()),
+                SelectFilter::make('resiko_keterlambatan')
+                    ->label('Filter Resiko')
+                    ->searchable()
+                    ->options(fn () => TaskWeekOverview::query()->distinct()->pluck('resiko_keterlambatan', 'resiko_keterlambatan')->toArray()),
+                SelectFilter::make('nama_week')
+                    ->label('Filter Week')
+                    ->searchable()
+                    ->options(fn () => TaskWeekOverview::query()->distinct()->pluck('nama_week', 'nama_week')->toArray()),
+                
             ]);
     }
 
