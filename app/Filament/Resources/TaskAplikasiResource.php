@@ -24,7 +24,7 @@ class TaskAplikasiResource extends Resource
     protected static ?string $navigationLabel = 'Proyek';
     protected static ?string $navigationGroup = 'Proyek Aplikasi';
     protected static ?string $pluralLabel = 'Proyek';
-    protected static ?int $navigationSort = 2; // Menentukan urutan menu
+    protected static ?int $navigationSort = 1; // Menentukan urutan menu
 
      public static function getRelations(): array
      {

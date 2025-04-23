@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class ReportAplikasi extends Model
 {
     use HasFactory;
-
+    protected $casts = [
+        'gambar' => 'array',
+    ];
     protected $fillable = ['task_aplikasi_id', 'tanggal', 'jenistahapaplikasi_id', 'keterangan', 'gambar', 'lampiran'];
 
     public function taskaplikasi()

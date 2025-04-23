@@ -10,6 +10,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http; // Pastikan ini ada!
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -21,7 +24,7 @@ class ReportfumigasiResource extends Resource
     protected static ?string $navigationLabel = 'Report Harian';
     protected static ?string $navigationGroup = 'Pengolahan Fumigasi';
     protected static ?string $pluralLabel = 'Report';
-    protected static ?int $navigationSort = 3; // Menentukan urutan menu
+    protected static ?int $navigationSort = 2; // Menentukan urutan menu
 
     public static function form(Form $form): Form
     {
@@ -61,16 +64,32 @@ class ReportfumigasiResource extends Resource
             Forms\Components\DatePicker::make('tanggal') // Updated to map to 'tanggal'
                 ->label('Pilih Hari')
                 ->default(now())
-                ->required(),                         
+                ->required(),     
+            Forms\Components\TextArea::make('keterangan')
+                ->label('Keterangan'),                    
             Forms\Components\FileUpload::make('gambar')
             ->label('Gambar')
             ->directory('report-fumigasi/gambar')
             ->preserveFilenames()
-            ->image(),
+            ->multiple()
+            ->image()                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
+                // Jika sedang edit, gunakan ID dari model; jika baru, buat UUID unik
+                $ReportfumigasiID = $get('id') ?? Str::uuid()->toString();
+        
+                // Gunakan session untuk menyimpan counter per sesi unggahan
+                $counter = session()->increment("upload_counter_{$ReportfumigasiID}", 1);
+        
+                return "reportfumigasi_{$ReportfumigasiID}_gambar_{$counter}." . $file->getClientOriginalExtension();
+            }),
             Forms\Components\FileUpload::make('lampiran')
             ->label('Lampiran')
             ->directory('report-fumigasi/lampiran')
             ->preserveFilenames()
+            ->getUploadedFileNameForStorageUsing(function ($file) {
+                $timestamp = now()->format('Ymd_His');
+                $extension = $file->getClientOriginalExtension();
+                return "LampiranReportFumigasi_{$timestamp}." . $extension;
+            })
             ->acceptedFileTypes(['application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),              
             ]);
     }
@@ -80,10 +99,12 @@ class ReportfumigasiResource extends Resource
         return asset('storage/' . $record->lampiran);
     }
 
-    public static function getDokumentasiFotoUrls($record): string
+    public static function getDokumentasiFotoUrls($record): array
     {
-        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
-        return asset('storage/' . $record->gambar);
+        return array_map(function ($gambar) {
+            //return asset('ProjectTrackerIndoraj/storage/app/public/' . $foto);
+            return asset('storage/' . $gambar);
+        }, $record->gambar);
     }
 
     public static function table(Table $table): Table
@@ -94,8 +115,6 @@ class ReportfumigasiResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal')->sortable(),
                 Tables\Columns\TextColumn::make('jenistahapfumigasi.nama_task')->sortable()->label('Tahap fumigasi'),
                 Tables\Columns\TextColumn::make('keterangan')->sortable(),
-                Tables\Columns\TextColumn::make('gambar')->sortable(),
-                Tables\Columns\TextColumn::make('lampiran')->sortable(),
             ])
             ->filters([
                 //
@@ -119,7 +138,7 @@ class ReportfumigasiResource extends Resource
                     ->modalHeading('Preview Dokumentasi')
                     ->modalWidth('max-w-4xl') // Ukuran modal lebih besar agar gambar terlihat jelas
                     ->modalContent(fn ($record) => view('components.image-viewer', [
-                        'imageUrl' => self::getDokumentasiFotoUrls($record), // Ambil URL gambar dari helper function
+                        'imageUrls' => self::getDokumentasiFotoUrls($record), // Ambil URL gambar dari helper function
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Tutup'),

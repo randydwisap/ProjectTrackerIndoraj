@@ -22,7 +22,7 @@ class JenisTahapAplikasiResource extends Resource
     protected static ?string $pluralLabel = 'Master Tahapan Proyek Aplikasi';
         // Updated navigation label
         protected static ?string $navigationLabel = 'Master Tahapan Proyek';
-        protected static ?int $navigationSort = 1; // Menentukan urutan menu
+        protected static ?int $navigationSort = 3; // Menentukan urutan menu
     public static function form(Form $form): Form
     {
         return $form

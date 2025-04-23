@@ -9,6 +9,9 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http; // Pastikan ini ada!
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -21,7 +24,7 @@ class ReportAplikasiResource extends Resource
     protected static ?string $navigationLabel = 'Report';
     protected static ?string $navigationGroup = 'Proyek Aplikasi';
     protected static ?string $pluralLabel = 'Report';
-    protected static ?int $navigationSort = 3; // Menentukan urutan menu
+    protected static ?int $navigationSort = 2; // Menentukan urutan menu
 
     public static function form(Form $form): Form
     {
@@ -62,12 +65,47 @@ class ReportAplikasiResource extends Resource
                 ->label('Pilih Hari')
                 ->default(now())
                 ->required(),            
-            Forms\Components\TextInput::make('gambar'),               
-            Forms\Components\TextInput::make('lampiran'),
-            Forms\Components\TextArea::make('keterangan')->required(),          
+                Forms\Components\TextArea::make('keterangan')
+                ->label('Keterangan'),                    
+            Forms\Components\FileUpload::make('gambar')
+            ->label('Gambar')
+            ->directory('report-aplikasi/gambar')
+            ->preserveFilenames()
+            ->multiple()
+            ->image()                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
+                // Jika sedang edit, gunakan ID dari model; jika baru, buat UUID unik
+                $ReportaplikasiID = $get('id') ?? Str::uuid()->toString();
+        
+                // Gunakan session untuk menyimpan counter per sesi unggahan
+                $counter = session()->increment("upload_counter_{$ReportaplikasiID}", 1);
+        
+                return "reportaplikasi{$ReportaplikasiID}_gambar_{$counter}." . $file->getClientOriginalExtension();
+            }),
+            Forms\Components\FileUpload::make('lampiran')
+            ->label('Lampiran')
+            ->directory('report-aplikasi/lampiran')
+            ->preserveFilenames()
+            ->getUploadedFileNameForStorageUsing(function ($file) {
+                $timestamp = now()->format('Ymd_His');
+                $extension = $file->getClientOriginalExtension();
+                return "LampiranReportAplikasi_{$timestamp}." . $extension;
+            })
+            ->acceptedFileTypes(['application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),              
             ]);
     }
+    public static function getLampiranUrl($record): string
+    {
+        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        return asset('storage/' . $record->lampiran);
+    }
 
+    public static function getDokumentasiFotoUrls($record): array
+    {
+        return array_map(function ($gambar) {
+            //return asset('ProjectTrackerIndoraj/storage/app/public/' . $foto);
+            return asset('storage/' . $gambar);
+        }, $record->gambar);
+    }
     public static function table(Table $table): Table
     {
         return $table
@@ -83,6 +121,28 @@ class ReportAplikasiResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('preview_pdf')
+                    ->label('')
+                    ->icon('heroicon-o-document')
+                    ->color('primary')
+                    ->modalHeading('Preview Lampiran')
+                    ->modalWidth('max-w-7xl') // Lebih fleksibel
+                    ->modalContent(fn ($record) => view('components.pdf-viewer', [
+                        'pdfUrl' => self::getLampiranUrl($record),
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),      
+                Tables\Actions\Action::make('preview_images')
+                    ->label('')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->modalHeading('Preview Dokumentasi')
+                    ->modalWidth('max-w-4xl') // Ukuran modal lebih besar agar gambar terlihat jelas
+                    ->modalContent(fn ($record) => view('components.image-viewer', [
+                        'imageUrls' => self::getDokumentasiFotoUrls($record), // Ambil URL gambar dari helper function
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

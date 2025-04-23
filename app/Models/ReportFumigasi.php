@@ -19,6 +19,10 @@ class ReportFumigasi extends Model
     {
         return $this->belongsTo(JenisTahapFumigasi::class);
     }
+    protected $casts = [
+        'gambar' => 'array',
+    ];
+
 
     // Hook untuk update Taskfumigasi.tahap_pengerjaan setelah simpan
     protected static function booted()
