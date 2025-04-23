@@ -67,7 +67,7 @@ class TaskResource extends Resource
                         $set('volume_arsip', $marketing->total_volume);
                         $set('no_telp_pm', auth()->user()->Telepon);
                         $set('status', 'Behind Schedule');
-                        $set('tahap_pengerjaan', 'Pemilahan');
+                        $set('tahap_pengerjaan', 'Pemilahan dan Identifikasi');
                         $set('project_manager', auth()->id());
 
                         // Panggil update target setelah marketing_id diubah
@@ -90,7 +90,7 @@ class TaskResource extends Resource
                 ->label('Tahap Pengerjaan')
                 ->required()
                 ->options(\App\Models\JenisTask::pluck('nama_task', 'nama_task'))
-                ->default('Pemilahan')
+                ->default('Pemilahan & Identifikasi')
                 ->dehydrated(true), // Pastikan nilai ini ikut dikirim saat submit
 
             Forms\Components\Select::make('status')
@@ -324,7 +324,7 @@ class TaskResource extends Resource
                     ->sortable(),
 
                 ProgressBar::make('dikerjakan_step1')
-                ->label('Pemilahan & Identifikasi (mL)')
+                ->label('Pemilahan & Identifikasi')
                     ->getStateUsing(function ($record) {
                         $total = $record->volume_arsip;
                         $progress = $record->dikerjakan_step1;
@@ -336,7 +336,7 @@ class TaskResource extends Resource
                     ->extraAttributes(['class' => 'progress-bar-hidden']),
 
                 ProgressBar::make('dikerjakan_step2')
-                    ->label('Manuver dan Pemberkasan (mL)')
+                    ->label('Manuver dan Pemberkasan')
                     ->getStateUsing(function ($record) {
                         $total = $record->hasil_pemilahan;
                         $progress = $record->dikerjakan_step2;
@@ -348,7 +348,7 @@ class TaskResource extends Resource
                     ->extraAttributes(['class' => 'progress-bar-hidden']),
 
                 ProgressBar::make('dikerjakan_step3')
-                    ->label('Input Data (mL)')
+                    ->label('Input Data')
                     ->getStateUsing(function ($record) {
                         $total = $record->hasil_pemilahan;
                         $progress = $record->dikerjakan_step3;
@@ -360,7 +360,7 @@ class TaskResource extends Resource
                     ->extraAttributes(['class' => 'progress-bar-hidden']),
 
                 ProgressBar::make('dikerjakan_step4')
-                    ->label('Pelabelan dan Penataan (mL)')
+                    ->label('Pelabelan dan Penataan')
                     ->getStateUsing(function ($record) {
                         $total = $record->hasil_pemilahan;
                         $progress = $record->dikerjakan_step4;

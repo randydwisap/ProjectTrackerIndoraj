@@ -140,7 +140,7 @@ class TaskDayDetailRelationManager extends RelationManager
                     ->mutateFormDataUsing(function (array $data) {
                         $taskDetail = $this->ownerRecord;
 
-                        $data['task_detail_id'] = $taskDetail->id;
+                        $data['task_week_overview_id'] = $taskDetail->id;
                         $data['task_id'] = $taskDetail->task_id;
 
                         // fallback ke input user jika tidak ada di taskDetail

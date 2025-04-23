@@ -157,7 +157,8 @@ public function hitungStatus()
     if (
     $this->dikerjakan_step4 >= $this->hasil_pemilahan &&
     $this->dikerjakan_step4 != 0 &&
-    $this->hasil_pemilahan != 0
+    $this->hasil_pemilahan != 0 &&
+    $this->dikerjakan_step1 >= $this->volume_arsip
 ) {
         $this->status = 'Completed';
     } elseif ($this->volume_arsip > 0) {
@@ -176,13 +177,18 @@ public function hitungStatus()
 public function hitungTahap()
 {
     if ($this->dikerjakan_step4 > 0) {
-        $this->tahap_pengerjaan = 'Pelabelan dan Penataan';
+        $jenisTask = JenisTask::find(4);
     } elseif ($this->dikerjakan_step3 > 0) {
-        $this->tahap_pengerjaan = 'Input Data';
+        $jenisTask = JenisTask::find(3);
     } elseif ($this->dikerjakan_step2 > 0) {
-        $this->tahap_pengerjaan = 'Manuver dan Pemberkasan';
+        $jenisTask = JenisTask::find(2);
     } else {
-        $this->tahap_pengerjaan = 'Pemilahan dan Identifikasi';
+        $jenisTask = JenisTask::find(1);
+    }
+
+    // Cek apakah task ditemukan
+    if ($jenisTask) {
+        $this->tahap_pengerjaan = $jenisTask->nama_task;
     }
 }
 

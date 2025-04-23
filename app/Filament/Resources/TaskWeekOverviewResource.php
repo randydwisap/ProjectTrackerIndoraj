@@ -136,11 +136,12 @@ class TaskWeekOverviewResource extends Resource
         ];
     }
 
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListTaskWeekOverviews::route('/'),
-            'create' => Pages\CreateTaskWeekOverview::route('/create'),
+            //'create' => Pages\CreateTaskWeekOverview::route('/create'),
             'edit' => Pages\EditTaskWeekOverview::route('/{record}/edit'),
         ];
     }
