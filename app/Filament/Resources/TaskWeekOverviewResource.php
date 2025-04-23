@@ -114,7 +114,7 @@ class TaskWeekOverviewResource extends Resource
                 ->sortable()
                 ->color(fn ($state) => match ($state) {
                     'Low' => 'success',
-                    'Moderate' => 'warning',
+                    'Medium' => 'warning',
                     'High' => 'danger',
                     'Completed' => 'gray',
                     default => 'secondary',

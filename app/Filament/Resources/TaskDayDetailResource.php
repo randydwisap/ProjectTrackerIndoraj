@@ -196,7 +196,7 @@ protected static function resolveTaskDetailId(callable $set, callable $get): voi
                 SelectFilter::make('task_week_overview_id')
                 ->label('Filter Week')
                 ->searchable()
-                ->options(fn () => \App\Models\TaskWeekOverview::pluck('nama_week', 'id')->toArray()),
+                ->options(fn () => \App\Models\TaskWeekOverview::pluck('nama_week', 'nama_week')->toArray()),
                 SelectFilter::make('jenis_task_id')
                 ->label('Filter Tahap')
                 ->searchable()

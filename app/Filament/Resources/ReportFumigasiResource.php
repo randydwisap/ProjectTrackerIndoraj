@@ -32,6 +32,7 @@ class ReportfumigasiResource extends Resource
                 ->required()
                 ->reactive()
                 ->label('Pekerjaan fumigasi'),
+
                 Forms\Components\Select::make('jenistahapfumigasi_id')
                 ->label('Tahap fumigasi')
                 ->required()
@@ -55,17 +56,34 @@ class ReportfumigasiResource extends Resource
                     return \App\Models\JenistahapFumigasi::whereNotIn('id', $usedTahapIds)
                         ->orderBy('id')
                         ->pluck('nama_task', 'id');
-                }),
-                    
+                }),                    
             
             Forms\Components\DatePicker::make('tanggal') // Updated to map to 'tanggal'
                 ->label('Pilih Hari')
                 ->default(now())
-                ->required(),            
-            Forms\Components\TextInput::make('gambar'),               
-            Forms\Components\TextInput::make('lampiran'),
-            Forms\Components\TextArea::make('keterangan')->required(),          
+                ->required(),                         
+            Forms\Components\FileUpload::make('gambar')
+            ->label('Gambar')
+            ->directory('report-fumigasi/gambar')
+            ->preserveFilenames()
+            ->image(),
+            Forms\Components\FileUpload::make('lampiran')
+            ->label('Lampiran')
+            ->directory('report-fumigasi/lampiran')
+            ->preserveFilenames()
+            ->acceptedFileTypes(['application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),              
             ]);
+    }
+    public static function getLampiranUrl($record): string
+    {
+        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        return asset('storage/' . $record->lampiran);
+    }
+
+    public static function getDokumentasiFotoUrls($record): string
+    {
+        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        return asset('storage/' . $record->gambar);
     }
 
     public static function table(Table $table): Table
@@ -83,6 +101,28 @@ class ReportfumigasiResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('preview_pdf')
+                    ->label('')
+                    ->icon('heroicon-o-document')
+                    ->color('primary')
+                    ->modalHeading('Preview Lampiran')
+                    ->modalWidth('max-w-7xl') // Lebih fleksibel
+                    ->modalContent(fn ($record) => view('components.pdf-viewer', [
+                        'pdfUrl' => self::getLampiranUrl($record),
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),      
+                Tables\Actions\Action::make('preview_images')
+                    ->label('')
+                    ->icon('heroicon-o-photo')
+                    ->color('info')
+                    ->modalHeading('Preview Dokumentasi')
+                    ->modalWidth('max-w-4xl') // Ukuran modal lebih besar agar gambar terlihat jelas
+                    ->modalContent(fn ($record) => view('components.image-viewer', [
+                        'imageUrl' => self::getDokumentasiFotoUrls($record), // Ambil URL gambar dari helper function
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
