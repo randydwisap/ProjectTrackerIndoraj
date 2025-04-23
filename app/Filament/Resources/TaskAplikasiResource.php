@@ -108,7 +108,7 @@ class TaskAplikasiResource extends Resource
                 ->disabled()
                 ->options([
                     'Low' => 'Low',
-                    'Moderate' => 'Moderate',
+                    'Medium' => 'Medium',
                     'High' => 'High',
                     'Completed' => 'Completed',
                 ])
@@ -258,7 +258,7 @@ class TaskAplikasiResource extends Resource
                     ->sortable()
                     ->color(fn ($state) => match ($state) {
                         'Low' => 'success',
-                        'Moderate' => 'warning',
+                        'Medium' => 'warning',
                         'High' => 'danger',
                         'Completed' => 'gray',
                         default => 'secondary',

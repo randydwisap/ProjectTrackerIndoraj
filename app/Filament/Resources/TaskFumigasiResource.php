@@ -109,7 +109,7 @@ class TaskFumigasiResource extends Resource
                 ->disabled()
                 ->options([
                     'Low' => 'Low',
-                    'Moderate' => 'Moderate',
+                    'Medium' => 'Medium',
                     'High' => 'High',
                     'Completed' => 'Completed',
                 ])
@@ -259,7 +259,7 @@ class TaskFumigasiResource extends Resource
                     ->sortable()
                     ->color(fn ($state) => match ($state) {
                         'Low' => 'success',
-                        'Moderate' => 'warning',
+                        'Medium' => 'warning',
                         'High' => 'danger',
                         'Completed' => 'gray',
                         default => 'secondary',
