@@ -8,6 +8,7 @@ use App\Models\Task;
 
 class TaskCountWidget extends BaseWidget
 {
+    protected static ?int $sort = 6;
     protected function getStats(): array
     {
         return [

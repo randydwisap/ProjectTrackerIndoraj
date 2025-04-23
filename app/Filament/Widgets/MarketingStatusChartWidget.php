@@ -8,7 +8,7 @@ use App\Models\Marketing;
 class MarketingStatusChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Marketing'; // Judul Widget
-    protected static ?int $sort = 2; // Urutan di dashboard
+    protected static ?int $sort = 1; // Urutan di dashboard
     protected static ?string $maxHeight = '300px'; // Atur tinggi chart
 
 

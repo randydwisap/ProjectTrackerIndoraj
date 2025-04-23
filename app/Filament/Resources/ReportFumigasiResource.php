@@ -16,7 +16,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ReportfumigasiResource extends Resource
+class ReportFumigasiResource extends Resource
 {
     protected static ?string $model = ReportFumigasi::class;
 

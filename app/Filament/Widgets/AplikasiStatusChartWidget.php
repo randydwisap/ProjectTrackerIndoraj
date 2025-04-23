@@ -8,7 +8,7 @@ use App\Models\TaskAplikasi;
 class AplikasiStatusChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Aplikasi'; // Judul Widget
-    protected static ?int $sort = 2; // Urutan di dashboard
+    protected static ?int $sort = 4; // Urutan di dashboard
     protected static ?string $maxHeight = '300px'; // Atur tinggi chart
 
 
@@ -16,6 +16,7 @@ class AplikasiStatusChartWidget extends ChartWidget
     {
         return 'doughnut'; // Bisa juga 'pie'
     }
+
 
     protected function getData(): array
     {

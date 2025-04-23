@@ -7,6 +7,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use App\Filament\Widgets\TaskCountWidget;
 use App\Filament\Widgets\MarketingStatusChartWidget;
+use App\Filament\Widgets\TaskBarChartWidget;
 use App\Filament\Widgets\TaskStatusChartWidget; // Tambahkan ini
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -14,6 +15,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
+use App\Filament\Resources\TaskResource\Widgets\TaskSelesaiPerMingguChart;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,6 +30,8 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Auth\EditProfile;
 use Filament\Navigation\UserMenuItem;
 use App\Filament\Pages\ChangePassword;
+use App\Filament\Widgets\AplikasiCountWidget;
+use App\Filament\Widgets\FumigasiCountWidget;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
@@ -36,6 +40,7 @@ use Filament\Pages\Page;
 
 class DashboardPanelProvider extends PanelProvider
 {    
+    
     public function panel(Panel $panel): Panel
     {
         
@@ -62,14 +67,7 @@ class DashboardPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,                
             ])            
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,  
-                TaskCountWidget::class, // Tambahkan widget ini  
-                TaskStatusChartWidget::class, // Tambahkan widget Pie Chart       
-                MarketingStatusChartWidget::class, // Tambahkan widget Pie Chart     
-                
-            ])            
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')           
             ->navigationGroups([
                 'Manajemen Tugas',
             ])
@@ -967,3 +965,4 @@ use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
     
 
     FilamentShieldPlugin::make();
+    

@@ -86,6 +86,5 @@ return [
 
     'livewire_loading_delay' => 'default',
     'brand' => 'Job Manager',
-    
 
 ];

@@ -8,7 +8,7 @@ use App\Models\TaskFumigasi;
 class FumigasiStatusChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Fumigasi'; // Judul Widget
-    protected static ?int $sort = 2; // Urutan di dashboard
+    protected static ?int $sort = 3; // Urutan di dashboard
     protected static ?string $maxHeight = '300px'; // Atur tinggi chart
 
 

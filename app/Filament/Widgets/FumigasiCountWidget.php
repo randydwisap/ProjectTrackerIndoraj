@@ -8,6 +8,7 @@ use App\Models\TaskFumigasi;
 
 class FumigasiCountWidget extends BaseWidget
 {
+    protected static ?int $sort = 7;
     protected function getStats(): array
     {
         return [

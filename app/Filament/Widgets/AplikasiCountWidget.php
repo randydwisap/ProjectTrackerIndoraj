@@ -8,6 +8,7 @@ use App\Models\TaskAplikasi;
 
 class AplikasiCountWidget extends BaseWidget
 {
+    protected static ?int $sort = 8;
     protected function getStats(): array
     {
         return [

@@ -27,7 +27,7 @@ class TaskResource extends Resource
     protected static ?string $navigationGroup = 'Pengolahan Arsip';
     protected static ?string $pluralLabel = 'Proyek';
     protected static ?int $navigationSort = 1; // Menentukan urutan menu
-
+    // Menambahkan widget ke halaman TaskResource
     public static function getRelations(): array
     {
         return [
