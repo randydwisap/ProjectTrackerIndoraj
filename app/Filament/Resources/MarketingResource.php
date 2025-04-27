@@ -9,7 +9,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\IconColumn;
 use Carbon\Carbon;
 use Filament\Tables;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Support\Facades\Http; // Pastikan ini ada!
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Filament\Resources\Resource;
@@ -26,6 +28,20 @@ class MarketingResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
     protected static ?string $navigationGroup = 'Marketing';
+
+    //untuk akses sesuai project manager
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Kalau bukan super_admin, filter datanya
+        if (!auth()->user()?->hasRole('super_admin')) {
+            $query->where('nama_pic', auth()->id());
+        }
+
+        return $query;
+    }
+
 
     public static function form(Forms\Form $form): Forms\Form
     {
@@ -74,8 +90,13 @@ class MarketingResource extends Resource
                     ]
                 ),
                 Forms\Components\TextInput::make('total_volume')->label('Volume Pekerjaan')->numeric()->required(),
-                Forms\Components\Select::make('nama_pic')->relationship('pic', 'name')->required()->label('PIC Projek'),
-                Forms\Components\Select::make('project_manager')->relationship('manager', 'name')->required()->label('Nama Project Manager'),
+                Forms\Components\Select::make('nama_pic')                        ->relationship('manager', 'name')
+                ->default(auth()->id()) // otomatis isi user yang login
+                ->disabled()            // supaya tidak bisa diganti
+                ->dehydrated()          // tetap dikirim ke server saat submit form
+                ->required()
+                ->label('Nama PIC'),
+                Forms\Components\Select::make('project_manager')->relationship('manager', 'name')->required()->label('Project Manager'),
                 Forms\Components\Select::make('status')->options([
                     'Pending' => 'Pending',
                     'In Progress' => 'In Progress',
@@ -118,7 +139,7 @@ class MarketingResource extends Resource
                 ->afterStateUpdated(fn ($state, callable $set, callable $get) => 
                     self::hitungDurasiProyek($set, $get)
                 ),
-                Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp '),
+                Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')->required(),
                 Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
                 Forms\Components\Select::make('status_pembayaran')->options([
                     'Belum Lunas' => 'Belum Lunas',
@@ -146,15 +167,15 @@ class MarketingResource extends Resource
 
     public static function getLampiranUrl($record): string
     {
-        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
-        return asset('storage/' . $record->lampiran);
+        return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        //return asset('storage/' . $record->lampiran);
     }
 
     public static function getDokumentasiFotoUrls($record): array
     {
         return array_map(function ($foto) {
-            //return asset('ProjectTrackerIndoraj/storage/app/public/' . $foto);
-            return asset('storage/' . $foto);
+            return asset('ProjectTrackerIndoraj/storage/app/public/' . $foto);
+            //return asset('storage/' . $foto);
         }, $record->dokumentasi_foto);
     }
 
@@ -212,6 +233,10 @@ class MarketingResource extends Resource
                     ->label('Manajer Operasional')
                     ->boolean()
                     ->sortable(),
+                Tables\Columns\IconColumn::make('manajer_keuangan')
+                    ->label('Manajer Keuangan')
+                    ->boolean()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('lampiran')
                     ->label('Lampiran')
                     ->hidden()
@@ -237,20 +262,39 @@ class MarketingResource extends Resource
                 ->requiresConfirmation()
                 ->modalHeading('Konfirmasi Persetujuan')
                 ->modalDescription('Apakah Anda yakin ingin menyetujui pekerjaan ini? Tindakan ini tidak dapat dibatalkan.')
-                ->modalSubmitActionLabel('Ya, Setujui')
-                ->action(function ($record) {
-                    if ($record) {
-                        $record->update(['status' => 'Completed']);
-                
-                        /** @var \App\Models\User $user */
-                        $user = auth()->user();
-                
-                        if ($user->hasRole('super_admin')) {
-                            $record->update(['manajer_operasional' => '1']);
-                        }
+                ->modalSubmitActionLabel('Ya, Setujui')         
+                ->visible(fn ($record) => 
+                $record
+                && $record->tahap_pengerjaan === 'Kontrak'
+                && $record->status === 'In Progress'
+                && (
+                    (auth()->user()?->hasRole('super_admin') && $record->manajer_operasional == 0) ||
+                    (auth()->user()?->hasRole('Admin') && $record->manajer_keuangan == 0)
+                )
+            )            
+            ->action(function ($record) {
+                $user = auth()->user();
+            
+                if ($record && $user) {
+                    if ($user->hasRole('super_admin')) {
+                        $record->update([
+                            'manajer_operasional' => 1,
+                        ]);
+                    } elseif ($user->hasRole('Admin')) {
+                        $record->update([
+                            'manajer_keuangan' => 1,
+                        ]);
                     }
-                })                
-                ->visible(fn ($record) => $record && $record->status === 'In Progress'),
+            
+                    // Setelah update manajer_operasional atau manajer_keuangan, cek apakah dua-duanya sudah 1
+                    if ($record->manajer_operasional == 1 && $record->manajer_keuangan == 1) {
+                        $record->update([
+                            'status' => 'Completed',
+                        ]);
+                    }
+                }
+            }),            
+
                 Tables\Actions\Action::make('reject')
                     ->form([
                         Forms\Components\TextInput::make('note')
@@ -264,13 +308,28 @@ class MarketingResource extends Resource
                 ->modalHeading('Konfirmasi Persetujuan')
                 ->modalDescription('Apakah Anda yakin ingin menolak pekerjaan ini? Tindakan ini tidak dapat dibatalkan.')
                 ->modalSubmitActionLabel('Ya, Setujui')
-                    ->action(function ($record, $data) {
-                        if ($record) {
-                            $record->update(['status' => 'Pending', 'note' => $data['note']]);
-                            $record->update(['manajer_operasional' => '0']);
-                        }
-                    })
-                    ->visible(fn ($record) => $record && $record->status === 'In Progress'),
+                ->visible(fn ($record) => 
+                $record
+                && $record->tahap_pengerjaan === 'Kontrak'
+                && $record->status === 'In Progress'
+                && (
+                    (auth()->user()?->hasRole('super_admin') && $record->manajer_operasional == 0) ||
+                    (auth()->user()?->hasRole('Admin') && $record->manajer_keuangan == 0)
+                )
+            )            
+                ->action(function ($record, $data) {
+                    $user = auth()->user();
+
+                    if ($record && $user) {
+                        $record->update([
+                            'status' => 'Pending',
+                            'note' => $data['note'] ?? null, // Kalau ada note dari form
+                            'manajer_operasional' => 0,
+                            'manajer_keuangan' => 0,
+                        ]);
+                    }
+                }),
+
                 Tables\Actions\Action::make('preview_pdf')
                     ->label('')
                     ->icon('heroicon-o-document')

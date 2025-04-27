@@ -8,7 +8,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use App\Filament\Widgets\TaskCountWidget;
 use App\Filament\Widgets\MarketingStatusChartWidget;
 use App\Filament\Widgets\TaskBarChartWidget;
-use App\Filament\Widgets\TaskStatusChartWidget; // Tambahkan ini
+use App\Filament\Widgets\TaskProgressWidget;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;

@@ -46,6 +46,7 @@ class TaskAplikasiResource extends Resource
                 ->options(
                     Marketing::where('status', 'Completed')
                         ->where('jenis_pekerjaan', 'Aplikasi')
+                        ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')
                 )                
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {

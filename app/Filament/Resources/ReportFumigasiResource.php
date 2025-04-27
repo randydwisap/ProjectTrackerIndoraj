@@ -46,7 +46,7 @@ class ReportFumigasiResource extends Resource
             
                     // Jika belum dipilih, tampilkan semua
                     if (!$taskFumigasiId) {
-                        return \App\Models\Jenistahapfumigasi::orderBy('id')
+                        return \App\Models\JenisTahapFumigasi::orderBy('id')
                             ->pluck('nama_task', 'id');
                     }
             
@@ -56,7 +56,7 @@ class ReportFumigasiResource extends Resource
                         ->toArray();
             
                     // Tampilkan hanya yang belum digunakan
-                    return \App\Models\JenistahapFumigasi::whereNotIn('id', $usedTahapIds)
+                    return \App\Models\JenisTahapFumigasi::whereNotIn('id', $usedTahapIds)
                         ->orderBy('id')
                         ->pluck('nama_task', 'id');
                 }),                    
@@ -65,7 +65,7 @@ class ReportFumigasiResource extends Resource
                 ->label('Pilih Hari')
                 ->default(now())
                 ->required(),     
-            Forms\Components\TextArea::make('keterangan')
+            Forms\Components\Textarea::make('keterangan')
                 ->label('Keterangan'),                    
             Forms\Components\FileUpload::make('gambar')
             ->label('Gambar')

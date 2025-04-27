@@ -49,6 +49,7 @@ class TaskFumigasiResource extends Resource
                 ->options(
                     Marketing::where('status', 'Completed')
                         ->where('jenis_pekerjaan', 'Fumigasi')
+                        ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')
                 )                
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {

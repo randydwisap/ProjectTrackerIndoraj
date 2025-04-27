@@ -49,6 +49,7 @@ class TaskResource extends Resource
                 ->options(
                     Marketing::where('status', 'Completed')
                         ->where('jenis_pekerjaan', 'Pengolahan Arsip')
+                        ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')
                 )                
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -65,10 +66,10 @@ class TaskResource extends Resource
                         $set('link_rab', $marketing->link_rab);
                         //$set('jenis_arsip', $marketing->jenis_pekerjaan);
                         $set('volume_arsip', $marketing->total_volume);
-                        $set('no_telp_pm', auth()->user()->Telepon);
+                       // $set('no_telp_pm', auth()->user()->Telepon);
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Pemilahan dan Identifikasi');
-                        $set('project_manager', auth()->id());
+                        //$set('project_manager', auth()->id());
 
                         // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -151,18 +152,21 @@ class TaskResource extends Resource
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
                 ->required(),
 
-            Forms\Components\Select::make('project_manager')
+                Forms\Components\Select::make('project_manager')
                 ->label('Project Manager')
                 ->options(User::pluck('name', 'id'))
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->default(auth()->id()) // Otomatis memilih user yang login
+                ->disabled()             // Menonaktifkan pilihan
+                ->required(),            
 
-            Forms\Components\TextInput::make('no_telp_pm')
+                Forms\Components\TextInput::make('no_telp_pm')
                 ->label('No Telp. PM')
                 ->tel()
+                ->default(auth()->user()->Telepon)  // Mengisi dengan nomor telepon user yang login
+                ->disabled()                        // Menonaktifkan input
                 ->required(),
-
 
             Forms\Components\TextInput::make('link_rab')
                 ->label('Link RAB')

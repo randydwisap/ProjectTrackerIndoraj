@@ -34,7 +34,7 @@ class ReportAplikasiRelationManagers extends RelationManager
                             ->pluck('jenistahapaplikasi_id')
                             ->toArray();
 
-                        return \App\Models\Jenistahapaplikasi::whereNotIn('id', $usedTahapIds)
+                        return \App\Models\jenistahapaplikasi::whereNotIn('id', $usedTahapIds)
                             ->orderBy('id')
                             ->pluck('nama_task', 'id');
                     }),
@@ -44,7 +44,7 @@ class ReportAplikasiRelationManagers extends RelationManager
                     ->default(now())
                     ->required(),
 
-                    Forms\Components\TextArea::make('keterangan')
+                    Forms\Components\Textarea::make('keterangan')
                     ->label('Keterangan'),                    
                 Forms\Components\FileUpload::make('gambar')
                 ->label('Gambar')
@@ -92,6 +92,7 @@ class ReportAplikasiRelationManagers extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('tanggal')->sortable(),
                 Tables\Columns\TextColumn::make('jenistahapaplikasi.nama_task')->sortable()->label('Tahap Aplikasi'),
+                Tables\Columns\TextColumn::make('keterangan')->sortable(),
             ])
             ->filters([])
             ->headerActions([

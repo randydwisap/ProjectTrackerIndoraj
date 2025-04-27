@@ -2,37 +2,57 @@
 
 namespace App\Filament\Widgets;
 
-use Carbon\Carbon;
 use Filament\Widgets\Widget;
-use App\Models\Task;
-use Illuminate\Support\Collection;
+use App\Models\Task; // Pastikan untuk mengimport model Task
+use Illuminate\Contracts\View\View;
 
 class TaskProgressWidget extends Widget
 {
-    protected static string $view = 'filament.widgets.task-progress-widget';
+    protected static ?string $heading = 'Proyek - Progress Pengerjaan';
 
-    protected function getViewData(): array
+    public function render(): View
     {
-        $tasks = Task::with('taskWeekOverviews.taskDayDetails')
-            ->get()
-            ->map(function ($task) {
-                $totalDuration = Carbon::parse($task->tgl_mulai)->diffInDays($task->tgl_selesai);
-                $actualFinishedDays = $task->taskWeekOverviews
-                    ->flatMap->taskDayDetails
-                    ->where('status', 'On Track')
-                    ->count();
+        // Ambil semua task dari database
+        $tasks = Task::all();
 
-                $progress = $totalDuration > 0
-                    ? round(($actualFinishedDays / $totalDuration) * 100)
-                    : 0;
+        // Cek apakah ada task yang ditemukan
+        if ($tasks->isEmpty()) {
+            return view('filament.widgets.task-progress-widget', [
+                'error' => 'Tidak ada task yang ditemukan',
+            ]);
+        }
 
-                return [
-                    'nama' => $task->pekerjaan,
-                    'progress' => min($progress, 100),
-                    'status' => $task->status,
-                ];
-            });
+        // Menghitung progress untuk masing-masing task
+$tasksProgress = $tasks->map(function ($task) {
 
-        return ['tasks' => $tasks];
+    $step1Progress = $task->volume_arsip > 0 
+        ? ($task->dikerjakan_step1 / $task->volume_arsip) * 100 
+        : 0;
+
+    $step2Progress = $task->hasil_pemilahan > 0 
+        ? ($task->dikerjakan_step2 / $task->hasil_pemilahan) * 100 
+        : 0;
+
+    $step3Progress = $task->hasil_pemilahan > 0 
+        ? ($task->dikerjakan_step3 / $task->hasil_pemilahan) * 100 
+        : 0;
+
+    $step4Progress = $task->hasil_pemilahan > 0 
+        ? ($task->dikerjakan_step4 / $task->hasil_pemilahan) * 100 
+        : 0;
+
+            // Kalkulasi total progress
+            $totalProgress = ($step1Progress / 100 * 30) + ($step2Progress / 100 * 30) + ($step3Progress / 100 * 20) + ($step4Progress / 100 * 20);
+
+            return [
+                'nama' => $task->pekerjaan, // Nama task
+                'progress' => $totalProgress, // Progress
+            ];
+        });
+
+        // Kembalikan view dengan data progress task
+        return view('filament.widgets.task-progress-widget', [
+            'tasks' => $tasksProgress,
+        ]);
     }
 }

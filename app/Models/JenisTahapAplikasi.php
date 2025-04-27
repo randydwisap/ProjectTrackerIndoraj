@@ -9,4 +9,8 @@ class JenisTahapAplikasi extends Model
 {
     protected $fillable = ['nama_task'];
     use HasFactory;
+    public function ReportAplikasi()
+    {
+        return $this->hasMany(ReportAplikasi::class);
+    }
 }

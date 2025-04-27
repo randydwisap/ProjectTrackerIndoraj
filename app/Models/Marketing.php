@@ -57,6 +57,7 @@ class Marketing extends Model
         'lampiran',
         'note',
         'manajer_operasional',
+        'manajer_keuangan',
     ];
 
     

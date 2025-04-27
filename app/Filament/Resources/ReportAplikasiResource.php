@@ -45,7 +45,7 @@ class ReportAplikasiResource extends Resource
             
                     // Jika belum dipilih, tampilkan semua
                     if (!$taskAplikasiId) {
-                        return \App\Models\Jenistahapaplikasi::orderBy('id')
+                        return \App\Models\JenisTahapAplikasi::orderBy('id')
                             ->pluck('nama_task', 'id');
                     }
             
@@ -55,7 +55,7 @@ class ReportAplikasiResource extends Resource
                         ->toArray();
             
                     // Tampilkan hanya yang belum digunakan
-                    return \App\Models\Jenistahapaplikasi::whereNotIn('id', $usedTahapIds)
+                    return \App\Models\JenisTahapAplikasi::whereNotIn('id', $usedTahapIds)
                         ->orderBy('id')
                         ->pluck('nama_task', 'id');
                 }),
@@ -65,7 +65,7 @@ class ReportAplikasiResource extends Resource
                 ->label('Pilih Hari')
                 ->default(now())
                 ->required(),            
-                Forms\Components\TextArea::make('keterangan')
+                Forms\Components\Textarea::make('keterangan')
                 ->label('Keterangan'),                    
             Forms\Components\FileUpload::make('gambar')
             ->label('Gambar')
@@ -95,15 +95,15 @@ class ReportAplikasiResource extends Resource
     }
     public static function getLampiranUrl($record): string
     {
-        //return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
-        return asset('storage/' . $record->lampiran);
+        return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
+        //return asset('storage/' . $record->lampiran);
     }
 
     public static function getDokumentasiFotoUrls($record): array
     {
         return array_map(function ($gambar) {
-            //return asset('ProjectTrackerIndoraj/storage/app/public/' . $gambar);
-            return asset('storage/' . $gambar);
+            return asset('ProjectTrackerIndoraj/storage/app/public/' . $gambar);
+            //return asset('storage/' . $gambar);
         }, $record->gambar);
     }
     public static function table(Table $table): Table
@@ -114,8 +114,6 @@ class ReportAplikasiResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal')->sortable(),
                 Tables\Columns\TextColumn::make('jenistahapaplikasi.nama_task')->sortable()->label('Tahap Aplikasi'),
                 Tables\Columns\TextColumn::make('keterangan')->sortable(),
-                Tables\Columns\TextColumn::make('gambar')->sortable(),
-                Tables\Columns\TextColumn::make('lampiran')->sortable(),
             ])
             ->filters([
                 //

@@ -42,7 +42,7 @@ class ReportFumigasiRelationManagers extends RelationManager
                     ->label('Pilih Hari')
                     ->default(now())
                     ->required(),
-                    Forms\Components\TextArea::make('keterangan')
+                    Forms\Components\Textarea::make('keterangan')
                     ->label('Keterangan'),
                     Forms\Components\FileUpload::make('gambar')
                     ->label('Gambar')
