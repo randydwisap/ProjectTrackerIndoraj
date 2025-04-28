@@ -63,11 +63,9 @@ class TaskFumigasiResource extends Resource
                         $set('tgl_selesai', $marketing->tgl_selesai);
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);
-                        $set('volume', $marketing->total_volume);
-                        $set('no_telp_pm', auth()->user()->Telepon);
+                        $set('volume', $marketing->total_volume);                        
                         $set('status', 'Behind Schedule');
-                        $set('tahap_pengerjaan', 'Persiapan dan Pemberian Fumigan');
-                        $set('project_manager', auth()->id());
+                        $set('tahap_pengerjaan', 'Persiapan dan Pemberian Fumigan');                        
 
                         // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -152,17 +150,20 @@ class TaskFumigasiResource extends Resource
                 ->required(),
 
             Forms\Components\Select::make('project_manager')
-                ->label('Project Manager')
-                ->options(User::pluck('name', 'id'))
-                ->searchable()
-                ->preload()
-                ->required(),
+                ->relationship('user', 'name')
+                ->default(auth()->id()) // otomatis isi user yang login
+                ->disabled()            // supaya tidak bisa diganti
+                ->dehydrated()          // tetap dikirim ke server saat submit form
+                ->required()
+                ->label('Project Manager'),       
 
             Forms\Components\TextInput::make('no_telp_pm')
                 ->label('No Telp. PM')
                 ->tel()
+                ->default(auth()->user()?->Telepon) // safe access
+                ->disabled()
+                ->dehydrated()
                 ->required(),
-
 
             Forms\Components\TextInput::make('link_rab')
                 ->label('Link RAB')

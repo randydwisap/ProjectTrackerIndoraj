@@ -58,18 +58,14 @@ class TaskResource extends Resource
                     if ($marketing) {
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
-                        $set('lokasi', $marketing->lokasi);
-                        //$set('tahap_pengerjaan', $marketing->tahap_pengerjaan);
+                        $set('lokasi', $marketing->lokasi);                        
                         $set('tgl_mulai', $marketing->tgl_mulai);
                         $set('tgl_selesai', $marketing->tgl_selesai);
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
-                        $set('link_rab', $marketing->link_rab);
-                        //$set('jenis_arsip', $marketing->jenis_pekerjaan);
-                        $set('volume_arsip', $marketing->total_volume);
-                       // $set('no_telp_pm', auth()->user()->Telepon);
+                        $set('link_rab', $marketing->link_rab);                    
+                        $set('volume_arsip', $marketing->total_volume);                       
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Pemilahan dan Identifikasi');
-                        //$set('project_manager', auth()->id());
 
                         // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -152,21 +148,22 @@ class TaskResource extends Resource
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
                 ->required(),
 
-                Forms\Components\Select::make('project_manager')
-                ->label('Project Manager')
-                ->options(User::pluck('name', 'id'))
-                ->searchable()
-                ->preload()
-                ->default(auth()->id()) // Otomatis memilih user yang login
-                ->disabled()             // Menonaktifkan pilihan
-                ->required(),            
+            Forms\Components\Select::make('project_manager')
+                        ->relationship('user', 'name')
+                        ->default(auth()->id()) // otomatis isi user yang login
+                        ->disabled()            // supaya tidak bisa diganti
+                        ->dehydrated()          // tetap dikirim ke server saat submit form
+                        ->required()
+                        ->label('Project Manager'),       
 
-                Forms\Components\TextInput::make('no_telp_pm')
-                ->label('No Telp. PM')
-                ->tel()
-                ->default(auth()->user()->Telepon)  // Mengisi dengan nomor telepon user yang login
-                ->disabled()                        // Menonaktifkan input
-                ->required(),
+            Forms\Components\TextInput::make('no_telp_pm')
+                        ->label('No Telp. PM')
+                        ->tel()
+                        ->default(auth()->user()?->Telepon) // safe access
+                        ->disabled()
+                        ->dehydrated()
+                        ->required(),
+                    
 
             Forms\Components\TextInput::make('link_rab')
                 ->label('Link RAB')

@@ -39,4 +39,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Marketing::class, 'project_manager');
     }
+
+    public function taskManager(): HasMany
+    {
+        return $this->hasMany(Task::class, 'project_manager');
+    }
+
+    public function taskManagerTelepon(): HasMany
+    {
+        return $this->hasMany(Task::class, 'Telepon');
+    }
 }

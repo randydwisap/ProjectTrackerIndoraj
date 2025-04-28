@@ -56,18 +56,14 @@ class TaskAplikasiResource extends Resource
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
                         $set('lokasi', $marketing->lokasi);
-                        //$set('tahap_pengerjaan', $marketing->tahap_pengerjaan);
                         $set('tgl_mulai', $marketing->tgl_mulai);
                         $set('tgl_selesai', $marketing->tgl_selesai);
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);
-                        //$set('jenis_arsip', $marketing->jenis_pekerjaan);
                         $set('volume', $marketing->total_volume);
-                        $set('no_telp_pm', auth()->user()->Telepon);
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Requirement Gathering');
-                        $set('project_manager', auth()->id());
-
+                        
                         // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
                         self::updateTargetPerminggu($set, $get);
@@ -151,16 +147,21 @@ class TaskAplikasiResource extends Resource
                 ->required(),
 
             Forms\Components\Select::make('project_manager')
-                ->label('Project Manager')
-                ->options(User::pluck('name', 'id'))
-                ->searchable()
-                ->preload()
-                ->required(),
+                ->relationship('user', 'name')
+                ->default(auth()->id()) // otomatis isi user yang login
+                ->disabled()            // supaya tidak bisa diganti
+                ->dehydrated()          // tetap dikirim ke server saat submit form
+                ->required()
+                ->label('Project Manager'),       
 
             Forms\Components\TextInput::make('no_telp_pm')
                 ->label('No Telp. PM')
                 ->tel()
+                ->default(auth()->user()?->Telepon) // safe access
+                ->disabled()
+                ->dehydrated()
                 ->required(),
+            
 
 
             Forms\Components\TextInput::make('link_rab')

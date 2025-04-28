@@ -90,76 +90,91 @@ class MarketingResource extends Resource
                     ]
                 ),
                 Forms\Components\TextInput::make('total_volume')->label('Volume Pekerjaan')->numeric()->required(),
-                Forms\Components\Select::make('nama_pic')                        ->relationship('manager', 'name')
-                ->default(auth()->id()) // otomatis isi user yang login
-                ->disabled()            // supaya tidak bisa diganti
-                ->dehydrated()          // tetap dikirim ke server saat submit form
-                ->required()
-                ->label('Nama PIC'),
-                Forms\Components\Select::make('project_manager')->relationship('manager', 'name')->required()->label('Project Manager'),
+                Forms\Components\Select::make('nama_pic')
+                        ->relationship('manager', 'name')
+                        ->default(auth()->id()) // otomatis isi user yang login
+                        ->disabled()            // supaya tidak bisa diganti
+                        ->dehydrated()          // tetap dikirim ke server saat submit form
+                        ->required()
+                        ->label('Nama PIC'),
+                Forms\Components\Select::make('project_manager')
+                        ->relationship('manager', 'name')
+                        ->required()
+                        ->label('Project Manager'),
                 Forms\Components\Select::make('status')->options([
-                    'Pending' => 'Pending',
-                    'In Progress' => 'In Progress',
-                    //'Completed' => 'Completed',
-                    //'On Hold' => 'On Hold',
-                ])->required()->label('Status Pekerjaan')->default('Pending')
-                ->afterStateUpdated(function ($state, callable $set) {
-                    if ($state === 'Completed') {
-                        // Logic for when status is set to Completed
-                    }
-                    if ($state === 'Pending') {
-                        // Logic for when status is set to Pending
-                    }
-                }),
+                        'Pending' => 'Pending',
+                        'In Progress' => 'In Progress',
+                        //'Completed' => 'Completed',
+                        //'On Hold' => 'On Hold',
+                        ])->required()->label('Status Pekerjaan')->default('Pending')
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if ($state === 'Completed') {
+                                // Logic for when status is set to Completed
+                            }
+                            if ($state === 'Pending') {
+                                // Logic for when status is set to Pending
+                            }
+                        }),
                 Forms\Components\TextInput::make('durasi_proyek')
-                    ->label('Durasi Proyek (Minggu)')
-                    ->numeric()
-                    ->disabled()
-                    ->default(fn ($get) => static::calculateDuration($get))
-                    ->formatStateUsing(fn ($state, $get) => static::calculateDuration($get))
-                    ->afterStateUpdated(fn ($state, $set, $get) => $set('durasi_proyek', static::calculateDuration($get)))
-                    ->required(),
-
+                        ->label('Durasi Proyek (Minggu)')
+                        ->numeric()
+                        ->disabled()
+                        ->dehydrated()
+                        ->default(fn ($get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
+                        ->formatStateUsing(fn ($state, $get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
+                        ->required(),
+                    
                 Forms\Components\TextInput::make('jumlah_sdm')->required()->label('Jumlah SDM')->numeric(),
                 Forms\Components\TextInput::make('nilai_proyek')->required()->label('Nilai Proyek')->numeric()->prefix('Rp '),
-                Forms\Components\TextInput::make('link_rab')->nullable()->label('Link RAB'), Forms\Components\DatePicker::make('tgl_mulai')
-                ->label('Tanggal Mulai')
-                ->required()
-                ->default(now())
-                ->reactive() // Agar memicu perhitungan otomatis
-                ->afterStateUpdated(fn ($state, callable $set, callable $get) => 
-                    self::hitungDurasiProyek($set, $get)
-                ),
-
+                Forms\Components\TextInput::make('link_rab')->nullable()->label('Link RAB'), 
+                Forms\Components\DatePicker::make('tgl_mulai')
+                        ->label('Tanggal Mulai')
+                        ->required()
+                        ->default(now())
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, $set, $get) {
+                            $set('durasi_proyek', static::calculateDuration(
+                                $state, // tanggal mulai baru
+                                $get('tgl_selesai') // tanggal selesai sekarang
+                            ));
+                        }),
+            
                 Forms\Components\DatePicker::make('tgl_selesai')
-                ->label('Tanggal Selesai')
-                ->required()
-                ->default(now())
-                ->reactive()
-                ->afterStateUpdated(fn ($state, callable $set, callable $get) => 
-                    self::hitungDurasiProyek($set, $get)
-                ),
+                        ->label('Tanggal Selesai')
+                        ->required()
+                        ->default(now()->addDays(7))
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, $set, $get) {
+                            $set('durasi_proyek', static::calculateDuration(
+                                $get('tgl_mulai'), // tanggal mulai sekarang
+                                $state // tanggal selesai baru
+                            ));
+                        }),
                 Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')->required(),
                 Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
-                Forms\Components\Select::make('status_pembayaran')->options([
-                    'Belum Lunas' => 'Belum Lunas',
-                    'Lunas' => 'Lunas',
-                ])->required()->label('Status Pembayaran')->default('Belum Lunas'),
+                Forms\Components\Select::make('status_pembayaran')
+                        ->options([
+                            'Belum Lunas' => 'Belum Lunas',
+                            'Lunas' => 'Lunas',
+                        ])
+                        ->required()
+                        ->label('Status Pembayaran')
+                        ->default('Belum Lunas'),
 
                 Forms\Components\FileUpload::make('dokumentasi_foto')
-                    ->multiple()
-                    ->required()
-                    ->directory('marketing_foto')
-                    ->image()
-                    ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
-                        // Jika sedang edit, gunakan ID dari model; jika baru, buat UUID unik
-                        $marketingId = $get('id') ?? Str::uuid()->toString();
-                
-                        // Gunakan session untuk menyimpan counter per sesi unggahan
-                        $counter = session()->increment("upload_counter_{$marketingId}", 1);
-                
-                        return "marketing_{$marketingId}_fotoabsen_{$counter}." . $file->getClientOriginalExtension();
-                    }),
+                        ->multiple()
+                        ->required()
+                        ->directory('marketing_foto')
+                        ->image()
+                        ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
+                            // Jika sedang edit, gunakan ID dari model; jika baru, buat UUID unik
+                            $marketingId = $get('id') ?? Str::uuid()->toString();
+                    
+                            // Gunakan session untuk menyimpan counter per sesi unggahan
+                            $counter = session()->increment("upload_counter_{$marketingId}", 1);
+                    
+                            return "marketing_{$marketingId}_fotoabsen_{$counter}." . $file->getClientOriginalExtension();
+                        }),
                 Forms\Components\FileUpload::make('lampiran')->required()->acceptedFileTypes(['application/pdf'])->directory('marketing_lampiran'),
                 Forms\Components\TextInput::make('note')->label('Catatan')->maxLength(255),
             ]);
@@ -363,20 +378,17 @@ class MarketingResource extends Resource
             ]);
     }
     
-        public static function calculateDuration($get)
+    public static function calculateDuration($tglMulai, $tglSelesai)
     {
-        $tglMulai = $get('tgl_mulai');
-        $tglSelesai = $get('tgl_selesai');
-
         if (!$tglMulai || !$tglSelesai) {
             return 0;
         }
-
-        $start = Carbon::parse($tglMulai);
-        $end = Carbon::parse($tglSelesai);
-
+    
+        $start = \Carbon\Carbon::parse($tglMulai);
+        $end = \Carbon\Carbon::parse($tglSelesai);
+    
         return ceil($start->diffInDays($end) / 7);
-    }
+    }    
 
 
     public static function getPages(): array

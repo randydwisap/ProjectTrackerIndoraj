@@ -43,6 +43,10 @@ class Task extends Model
         'hasil_pemilahan',
         'marketing_id',
     ];
+    public function Telepon()
+    {
+        return $this->belongsTo(User::class, 'Telepon');
+    }
 
     // Ubah `pelaksana` menjadi array secara otomatis
     protected $casts = [
