@@ -26,6 +26,19 @@ class ReportFumigasiResource extends Resource
     protected static ?string $pluralLabel = 'Report';
     protected static ?int $navigationSort = 2; // Menentukan urutan menu
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+    
+        // Kalau bukan super_admin atau manajer, filter berdasarkan task yang dimiliki oleh user
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->whereHas('taskFumigasi', function ($q) {
+                $q->where('project_manager', auth()->id());
+            });
+        }
+    
+        return $query;
+    }
     public static function form(Form $form): Form
     {
         return $form

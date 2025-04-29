@@ -28,13 +28,24 @@ class TaskFumigasiResource extends Resource
     protected static ?string $pluralLabel = 'Proyek';
     protected static ?int $navigationSort = 1; // Menentukan urutan menu
 
+
     public static function getRelations(): array
     {
         return [
             ReportFumigasiRelationManagers::class,
        ];
     }
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
 
+        // Kalau bukan super_admin, filter datanya
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->where('project_manager', auth()->id());
+        }
+
+        return $query;
+    }
 
     public static function form(Form $form): Form
     {

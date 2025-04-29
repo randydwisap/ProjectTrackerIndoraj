@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\TaskWeekAlihMediaResource\RelationManagers\TaskDayAlihMediaRelationManager;
 
 class TaskWeekAlihMediaResource extends Resource
@@ -24,7 +25,19 @@ class TaskWeekAlihMediaResource extends Resource
     protected static ?string $navigationLabel = 'Rekap Mingguan';
     protected static ?int $navigationSort = 3; // Menentukan urutan menu
 
-
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+    
+        // Kalau bukan super_admin atau manajer, filter berdasarkan task yang dimiliki oleh user
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->whereHas('taskAlihMedia', function ($q) {
+                $q->where('project_manager', auth()->id());
+            });
+        }
+    
+        return $query;
+    }
     public static function getRelations(): array
     {
         return [

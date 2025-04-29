@@ -283,19 +283,19 @@ class MarketingResource extends Resource
                 && $record->tahap_pengerjaan === 'Kontrak'
                 && $record->status === 'In Progress'
                 && (
-                    (auth()->user()?->hasRole('super_admin') && $record->manajer_operasional == 0) ||
-                    (auth()->user()?->hasRole('Admin') && $record->manajer_keuangan == 0)
+                    (auth()->user()?->hasRole('Manajer Operasional') && $record->manajer_operasional == 0) ||
+                    (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
                 )
             )            
             ->action(function ($record) {
                 $user = auth()->user();
             
                 if ($record && $user) {
-                    if ($user->hasRole('super_admin')) {
+                    if ($user->hasRole('Manajer Operasional')) {
                         $record->update([
                             'manajer_operasional' => 1,
                         ]);
-                    } elseif ($user->hasRole('Admin')) {
+                    } elseif ($user->hasRole('Manajer Keuangan')) {
                         $record->update([
                             'manajer_keuangan' => 1,
                         ]);
@@ -328,8 +328,8 @@ class MarketingResource extends Resource
                 && $record->tahap_pengerjaan === 'Kontrak'
                 && $record->status === 'In Progress'
                 && (
-                    (auth()->user()?->hasRole('super_admin') && $record->manajer_operasional == 0) ||
-                    (auth()->user()?->hasRole('Admin') && $record->manajer_keuangan == 0)
+                    (auth()->user()?->hasRole('Manajer Operasional') && $record->manajer_operasional == 0) ||
+                    (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
                 )
             )            
                 ->action(function ($record, $data) {

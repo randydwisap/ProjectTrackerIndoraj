@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TaskDayDetailResource extends Resource
 {
@@ -24,7 +25,20 @@ class TaskDayDetailResource extends Resource
     protected static ?string $navigationLabel = 'Laporan Harian';
 
     protected static ?int $navigationSort = 3; // Menentukan urutan menu
-
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+    
+        // Kalau bukan super_admin atau manajer, filter berdasarkan task yang dimiliki oleh user
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->whereHas('task', function ($q) {
+                $q->where('project_manager', auth()->id());
+            });
+        }
+    
+        return $query;
+    }
+    
     public static function form(Form $form): Form
 {
     return $form

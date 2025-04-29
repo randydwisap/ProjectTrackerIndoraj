@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Marketing;
 use App\Filament\Resources\TaskAplikasiResource\RelationManagers\ReportAplikasiRelationManagers;
 use App\Models\TaskAplikasi;
@@ -33,6 +34,17 @@ class TaskAplikasiResource extends Resource
         ];
      }
 
+     public static function getEloquentQuery(): Builder
+     {
+         $query = parent::getEloquentQuery();
+ 
+         // Kalau bukan super_admin, filter datanya
+         if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+             $query->where('project_manager', auth()->id());
+         }
+ 
+         return $query;
+     }
     public static function form(Form $form): Form
     {
         return $form->schema([

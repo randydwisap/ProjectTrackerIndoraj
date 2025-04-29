@@ -15,6 +15,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Marketing;
 use App\Filament\Resources\TaskAlihMediaResource\RelationManagers\TaskWeekAlihMediaRelationManager;
 use App\Filament\Resources\TaskAlihMediaResource\RelationManagers\TaskDayAlihMediaRelationManager;
@@ -30,6 +31,17 @@ class TaskAlihMediaResource extends Resource
     protected static ?int $navigationSort = 1; // Menentukan urutan menu
     // Menambahkan widget ke halaman TaskResource
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Kalau bukan super_admin, filter datanya
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->where('project_manager', auth()->id());
+        }
+
+        return $query;
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([

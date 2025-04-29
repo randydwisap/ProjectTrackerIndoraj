@@ -8,6 +8,7 @@ use App\Models\TaskWeekOverview;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -22,7 +23,19 @@ class TaskWeekOverviewResource extends Resource
     protected static ?string $navigationGroup = 'Pengolahan Arsip';
     protected static ?string $navigationLabel = 'Rekap Mingguan';
     protected static ?int $navigationSort = 4; // Menentukan urutan menu
-
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+    
+        // Kalau bukan super_admin atau manajer, filter berdasarkan task yang dimiliki oleh user
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->whereHas('task', function ($q) {
+                $q->where('project_manager', auth()->id());
+            });
+        }
+    
+        return $query;
+    }
     public static function form(Form $form): Form
     {
         return $form

@@ -10,6 +10,7 @@ use Filament\Forms;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -25,6 +26,19 @@ class TaskDayAlihMediaResource extends Resource
 
     protected static ?int $navigationSort = 2; // Menentukan urutan menu
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+    
+        // Kalau bukan super_admin atau manajer, filter berdasarkan task yang dimiliki oleh user
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
+            $query->whereHas('taskAlihMedia', function ($q) {
+                $q->where('project_manager', auth()->id());
+            });
+        }
+    
+        return $query;
+    }
     public static function form(Form $form): Form
 {
     return $form
