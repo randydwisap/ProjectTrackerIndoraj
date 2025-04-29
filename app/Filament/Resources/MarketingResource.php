@@ -35,7 +35,7 @@ class MarketingResource extends Resource
         $query = parent::getEloquentQuery();
 
         // Kalau bukan super_admin, filter datanya
-        if (!auth()->user()?->hasRole('super_admin')) {
+        if (!auth()->user()?->hasAnyRole(['super_admin', 'Manajer Keuangan', 'Manajer Operasional'])) {
             $query->where('nama_pic', auth()->id());
         }
 
