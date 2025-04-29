@@ -32,17 +32,17 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('nip')
+                Forms\Components\TextInput::make('NIP')
                     ->required()
                     ->label('NIP')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('nik')
+                Forms\Components\TextInput::make('NIK')
                     ->required()
                     ->label('NIK')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('telepon')
+                Forms\Components\TextInput::make('Telepon')
                     ->required()
-                    ->label('NIP')
+                    ->label('Telepon')
                     ->maxLength(255),
                 Forms\Components\Select::make('Jabatan')
                     ->required()
@@ -85,12 +85,15 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nik')        
+                Tables\Columns\TextColumn::make('NIK')        
                     ->searchable()
                     ->label('NIK'),
-                Tables\Columns\TextColumn::make('nip')        
+                Tables\Columns\TextColumn::make('NIP')        
                     ->searchable()
                     ->label('NIP'),
+                Tables\Columns\TextColumn::make('Jabatan')        
+                    ->searchable()
+                    ->label('Jabatan'),                    
                 Tables\Columns\TextColumn::make('Telepon')        
                     ->searchable()
                     ->label('Telepon'),

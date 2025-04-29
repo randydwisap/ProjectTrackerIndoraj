@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\TaskResource\RelationManagers;
+namespace App\Filament\Resources\TaskAlihMediaResource\RelationManagers;
 
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\RelationManagers\RelationManagerConfig;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Models\TaskWeekOverview;
+use App\Models\TaskWeekAlihMedia;
 
-class TaskWeekOverviewRelationManager extends RelationManager
+class TaskWeekAlihMediaRelationManager extends RelationManager
 {
-    protected static string $relationship = 'taskWeekOverviews';
+    protected static string $relationship = 'taskWeekAlihMedia';
     protected static ?string $title = 'Rekap Mingguan'; // Judul header
     protected static ?string $navigationLabel = 'Rekap Mingguan';
 
@@ -18,7 +18,7 @@ class TaskWeekOverviewRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('task.pekerjaan') // Display task.pekerjaan instead of task_id
+                Tables\Columns\TextColumn::make('taskAlihMedia.pekerjaan') // Display task.pekerjaan instead of task_id
                 ->label('Nama Task')
                 ->sortable()
                 ->searchable(),
@@ -30,20 +30,12 @@ class TaskWeekOverviewRelationManager extends RelationManager
                 ->label('Dikerjakan')
                 ->sortable()
                 ->searchable(),
-                Tables\Columns\TextColumn::make('arsip') // Display nama_task from jenis_task
-                ->label('Arsip')
-                ->sortable()
-                ->searchable(),
-                Tables\Columns\TextColumn::make('inarsip') // Display nama_task from jenis_task
-                ->label('Inarsip')
-                ->sortable()
-                ->searchable(),
                 Tables\Columns\TextColumn::make('total_step1') // Display nama_task from jenis_task
-                ->label('Pemilahan dan Identifikasi')
+                ->label('Scanning')
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step2') // Display nama_task from jenis_task
-                ->label('Manuver dan Pemberkasan')
+                ->label('Quality Control')
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step3') // Display nama_task from jenis_task
@@ -51,7 +43,7 @@ class TaskWeekOverviewRelationManager extends RelationManager
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step4') // Display nama_task from jenis_task
-                ->label('Pelabelan dan Penataan')
+                ->label('Upload Data Hyperlink')
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('status')

@@ -125,21 +125,6 @@ class TaskDayDetailResource extends Resource
                 ->default('On Track'),
         ]);
 }
-protected static function resolveTaskDetailId(callable $set, callable $get): void
-{
-    $taskId = $get('task_id');
-    $namaWeek = $get('nama_week');
-    $jenisTaskId = $get('jenis_task_id');
-
-    if ($taskId && $namaWeek && $jenisTaskId) {
-        $taskDetail = \App\Models\TaskWeekOverview::where('task_id', $taskId)
-            ->where('nama_week', $namaWeek)
-            ->where('jenis_task_id', $jenisTaskId)
-            ->first();
-
-        $set('task_detail_id', $taskDetail?->id);
-    }
-}
 
 
     public static function table(Table $table): Table

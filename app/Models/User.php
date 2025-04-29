@@ -24,9 +24,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'nip',
-        'nik',
-        'jabatan',
+        'NIP',
+        'NIK',
+        'Jabatan',
         'Telepon',
     ];
 
@@ -45,8 +45,27 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'project_manager');
     }
 
+    public function taskAlihMediaManager(): HasMany
+    {
+        return $this->hasMany(TaskAlihMedia::class, 'project_manager');
+    }
+
+    public function fumigasiManager(): HasMany
+    {
+        return $this->hasMany(TaskFumigasi::class, 'project_manager');
+    }
+
+    public function aplikasiManager(): HasMany
+    {
+        return $this->hasMany(TaskAplikasi::class, 'project_manager');
+    }
+
     public function taskManagerTelepon(): HasMany
     {
         return $this->hasMany(Task::class, 'Telepon');
+    }
+    public function taskAlihMediaManagerTelepon(): HasMany
+    {
+        return $this->hasMany(TaskAlihMedia::class, 'Telepon');
     }
 }
