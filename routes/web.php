@@ -10,3 +10,6 @@ Route::get('/', function () {
 Route::get('/landing', function () {
     return view('landing');
 });
+Route::get('/test-db-limit', function () {
+    return response()->view('errors.db-limit', [], 429);
+});

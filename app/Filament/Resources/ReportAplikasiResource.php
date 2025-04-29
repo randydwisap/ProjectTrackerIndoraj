@@ -106,14 +106,6 @@ class ReportAplikasiResource extends Resource
             ->acceptedFileTypes(['application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']),              
             ]);
     }
-/*************  ✨ Windsurf Command ⭐  *************/
-    /**
-     * Mendapatkan URL dari file lampiran report aplikasi yang diunggah.
-     *
-     * @param ReportAplikasi $record
-     * @return string
-     */
-/*******  eb2bf872-5d36-4cc3-87fe-9f7ff1f855db  *******/
     public static function getLampiranUrl($record): string
     {
         return asset('ProjectTrackerIndoraj/storage/app/public/' . $record->lampiran);
