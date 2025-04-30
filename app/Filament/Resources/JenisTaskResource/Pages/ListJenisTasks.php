@@ -14,7 +14,8 @@ class ListJenisTasks extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-            ->label('Tambah Tahapan'),
+            ->label('Tambah Tahapan')
+            ->label('Tambah Master Jenis Tahapan'), // Memindahkan ->label() ke baris yang sama
         ];
     }
 }

@@ -1,7 +1,7 @@
 <x-filament::widget>
     <x-filament::card>
         <h2 class="text-xl font-bold">Proyek - Progress Pengerjaan</h2>
-        <small class="text-xs font-regular text-gray-500 dark:text-gray-400">Pengolahan Arsip<br>Bobot: 1 = 30%, 2 = 30%, 3 = 20%, 4 = 20%</small>
+        <small class="text-xs font-regular text-gray-500 dark:text-gray-400">Alih Media<br>Bobot: 1 = 30%, 2 = 30%, 3 = 20%, 4 = 20%</small>
 
         @if(isset($error))
             <div class="alert alert-danger">

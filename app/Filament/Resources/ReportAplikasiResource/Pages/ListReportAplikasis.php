@@ -13,7 +13,8 @@ class ListReportAplikasis extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+            ->label('Tambah Laporan Aplikasi'), // Memindahkan ->label() ke baris yang sama
         ];
     }
 }
