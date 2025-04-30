@@ -6,63 +6,85 @@ use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User; // Pastikan ini ada!
-use Livewire\Attributes\Validate;
+use App\Models\User;
+use Livewire\Attributes\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class ChangePassword extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
     protected static string $view = 'filament.pages.change-password';
     protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $navigationLabel = 'Change Password';
+    protected static ?string $title = 'Change Your Password';
 
     public static function getSlug(): string
     {
-        return 'change-password'; // Ini yang menentukan URL!
+        return 'change-password';
     }
-    #[Validate('required|string|min:8')]
+
+    #[Rule('required|string')]
     public string $current_password = '';
 
-    #[Validate('required|string|min:8|confirmed')]
+    #[Rule('required|string')]
     public string $new_password = '';
 
+    #[Rule('required|string')]
     public string $new_password_confirmation = '';
 
     public function changePassword()
     {
-        $this->validate();
-    
+        $this->validate([
+            'current_password' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!Hash::check($value, Auth::user()->password)) {
+                        $fail('The current password is incorrect.');
+                    }
+                }
+            ],
+            'new_password' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+                'different:current_password'
+            ],
+            'new_password_confirmation' => 'required|string|same:new_password'
+        ]);
+
         /** @var User $user */
         $user = Auth::user();
-    
+
         if (!($user instanceof User)) {
-            $this->addError('current_password', 'User not found.');
+            Notification::make()
+                ->title('Error')
+                ->body('User not found.')
+                ->danger()
+                ->send();
             return;
         }
-    
-        if (!Hash::check($this->current_password, $user->password)) {
-            $this->addError('current_password', 'The current password is incorrect.');
-            return;
-        }
-    
-        // **Update password**
-        $user->password = Hash::make($this->new_password);
-        $user->save();
-    
-        // **Login ulang tanpa menghapus sesi**
-        Auth::login($user);
-        Auth::setUser($user); // Tambahkan ini!
-    
-        // **Regenerasi session agar tidak logout**
-        session()->put('password_hash_' . Auth::getDefaultDriver(), $user->getAuthPassword());
-    
-        // Reset form setelah sukses
+
+        $user->update([
+            'password' => Hash::make($this->new_password)
+        ]);
+
+        // Refresh session
+        Auth::setUser($user);
+        session()->regenerate();
+        session()->put('password_hash_'.Auth::getDefaultDriver(), $user->getAuthPassword());
+
         $this->reset(['current_password', 'new_password', 'new_password_confirmation']);
-    
-        // **Tampilkan notifikasi Filament**
+
         Notification::make()
-            ->title('Success')
-            ->body('Password successfully changed.')
+            ->title('Password Updated')
+            ->body('Your password has been changed successfully.')
             ->success()
+            ->persistent()
             ->send();
     }
 }
