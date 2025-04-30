@@ -71,12 +71,6 @@ class UserResource extends Resource
                 ->dehydrated(fn ($state) => filled($state)), // Hanya ubah jika diisi        
             ]);
     }
-    public static function canViewAny(): bool
-    {
-    /** @var User|null $user */
-    $user = Auth::user();
-    return $user?->can('user.view') ?? false;
-    }
     public static function table(Table $table): Table
     {
         return $table

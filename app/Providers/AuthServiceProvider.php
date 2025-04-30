@@ -29,7 +29,10 @@ class AuthServiceProvider extends ServiceProvider
 
     // List resource yang butuh permission otomatis
     $resources = [
-        'user', 'role' // Tambahkan resource lain di sini
+        'user', 'role' , 'marketing', 'taskAlihMedia', 'taskDayAlihMedia', 'taskWeekAlihMedia', 'jenisTaskAlihMedia',
+        'taskAplikasi', 'reportAplikasi', 'jenisTahapAplikasi'
+        , 'taskFumigasi', 'reportFumigasi', 'jenisTahapFumigasi'
+        , 'task', 'taskDayDetail', 'taskWeekOverview', 'jenisTask'
     ];
 
     $permissions = ['view', 'create', 'update', 'delete'];

@@ -28,6 +28,8 @@ class MarketingResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
     protected static ?string $navigationGroup = 'Marketing';
+    protected static ?string $pluralLabel = 'Proyek Marketing'; // Header
+    protected static ?string $navigationLabel = 'Proyek'; // Menu Tittle
 
     //untuk akses sesuai project manager
     public static function getEloquentQuery(): Builder
