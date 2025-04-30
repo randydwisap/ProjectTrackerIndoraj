@@ -51,7 +51,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="{{ asset('images/sadness.png') }}" alt="Sadness" class="image">
+        <img src="{{ asset('ProjectTrackerIndoraj/storage/app/public/images/sadness.png') }}" alt="Sadness" class="image">
         <div class="title">Awww... Don’t Cry.</div>
         <p class="message">It’s just a database connection limit.<br>Too many users are connected right now.<br>Please try again in a few moments.</p>
     </div>
