@@ -87,12 +87,19 @@ class TaskDayDetailResource extends Resource
                 ->label('Volume Dikerjakan')
                 ->reactive()
                 ->afterStateUpdated(function ($set, $get) {
-                    // 1. Hitung hasil_inarsip = output - hasil
                     $output = (float) ($get('output') ?: 0);
+                    $jenisTaskId = $get('jenis_task_id');
+                    
+                    // Jika jenis task bukan 1, maka hasil = output
+                    if ($jenisTaskId != 1) {
+                        $set('hasil', $output);
+                    }
+                    
+                    // Hitung hasil_inarsip = output - hasil
                     $hasil = (float) ($get('hasil') ?: 0);
                     $set('hasil_inarsip', $output - $hasil);
             
-                    // 2. Update status berdasarkan target_perday
+                    // Update status berdasarkan target_perday
                     $taskId = $get('task_id');
                     $task = \App\Models\Task::find($taskId);
                     $targetPerDay = (float) ($task?->target_perday ?? 0);
@@ -110,14 +117,15 @@ class TaskDayDetailResource extends Resource
             
                         $set('status', $status);
                     } else {
-                        $set('status', 'On Track'); // default kalau gak ada target
+                        $set('status', 'On Track');
                     }
-                }),            
+                }),          
             
-            Forms\Components\TextInput::make('hasil')
+                Forms\Components\TextInput::make('hasil')
                 ->numeric()
                 ->label('Hasil Arsip')
                 ->reactive()
+                ->readonly(fn ($get) => $get('jenis_task_id') != 1) // Nonaktifkan field jika jenis task bukan 1
                 ->afterStateUpdated(fn ($set, $get) =>
                     $set('hasil_inarsip', (float) ($get('output') ?: 0) - (float) ($get('hasil') ?: 0))
                 ),
