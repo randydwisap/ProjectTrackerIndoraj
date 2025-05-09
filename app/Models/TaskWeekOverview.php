@@ -82,6 +82,12 @@ protected static function booted()
         ->where('jenis_task_id', 1)
         ->sum('hasil');
 
+        $totalUniqueDatesInput = \App\Models\TaskDayDetail::where('task_id', $weekOverview->task_id)
+        ->distinct('tanggal')
+        ->count('tanggal');
+
+        $totalTargetMingguDinamis = $totalUniqueDatesInput * $task->target_perhari;
+
         $task = \App\Models\Task::find($weekOverview->task_id);
         $task->hasil_pemilahan = $totalArsip;
         $task->save(); // Ini akan memicu saving & updating
