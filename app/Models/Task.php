@@ -65,7 +65,8 @@ class Task extends Model
     {
         parent::boot();
         
-        static::saving(function ($task) {            
+        static::saving(function ($task) {
+            $task->total_hari_kerja = $task->getTotalHariKerja();
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
@@ -75,7 +76,8 @@ class Task extends Model
             $task->hitungTahap();
         });
 
-        static::updating(function ($task) {        
+        static::updating(function ($task) {
+            $task->total_hari_kerja = $task->getTotalHariKerja();
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
@@ -100,7 +102,7 @@ class Task extends Model
             $task->total_hari_kerja = $task->getTotalHariKerja();
             $jenisTasks = JenisTask::all(); // Assuming you have a model for JenisTask
             $hariKerjaPerMinggu = $task->getTotalHariKerjaPerMinggu(); // Asumsikan metode ini berada di model Task
-            
+        
             for ($i = 1; $i <= $durasiProyek; $i++) {
             $taskWeek = new TaskWeekOverview();
             $taskWeek->task_id = $task->id;
@@ -304,39 +306,41 @@ public function getTotalHariKerjaPerMinggu(): array
 {
     $start = Carbon::parse($this->tgl_mulai);
     $end = Carbon::parse($this->tgl_selesai);
-    
-    // Hitung total minggu dalam proyek (pembulatan ke atas)
-    $totalMinggu = ceil($start->diffInDays($end) / 7);
-    
-    // Inisialisasi array dengan nilai default 0 untuk semua minggu
-    $hasil = array_fill(1, $totalMinggu, 0);
-
     $periode = CarbonPeriod::create($start, $end);
-    
-    // Ambil tanggal libur (sama seperti sebelumnya)
+
+    // Ambil semua tahun yang dicakup dalam periode
     $years = range($start->year, $end->year);
     $tanggalMerah = [];
-    
+
+    // Ambil semua tanggal merah (termasuk cuti)
     foreach ($years as $year) {
         $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
         if ($response->successful()) {
-            foreach ($response->json() as $item) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
                 $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
             }
         }
     }
 
-    // Hitung hari kerja per minggu
+    $hasil = [];
     foreach ($periode as $tanggal) {
-        if ($tanggal->dayOfWeek !== Carbon::SUNDAY && 
-            !in_array($tanggal->toDateString(), $tanggalMerah)) {
-            
-            $mingguKe = $start->diffInWeeks($tanggal) + 1;
-            
-            // Pastikan mingguKe tidak melebihi totalMinggu
-            if ($mingguKe <= $totalMinggu) {
-                $hasil[$mingguKe]++;
+        // Hitung hanya jika bukan Minggu dan bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            // Hitung minggu ke-n dari tgl_mulai
+            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+
+            $key = 'HariKerjaMingguKe' . $mingguKe;
+            if (!isset($hasil[$key])) {
+                $hasil[$key] = 0;
             }
+
+            $hasil[$key]++;
         }
     }
 
