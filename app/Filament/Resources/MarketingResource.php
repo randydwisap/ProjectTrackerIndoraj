@@ -104,64 +104,63 @@ class MarketingResource extends Resource
                         ->required()
                         ->label('Project Manager'),
                 Forms\Components\Select::make('status')->options([
-                        'Pending' => 'Pending',
+                        'Ditolak' => 'Ditolak',
                         'In Progress' => 'In Progress',
-                        //'Completed' => 'Completed',
-                        //'On Hold' => 'On Hold',
-                        ])->required()->label('Status Pekerjaan')->default('Pending')
+                        'Pengajuan' => 'Pengajuan',
+                        ])->required()->label('Status Pekerjaan')->default('Ditolak')
                         ->afterStateUpdated(function ($state, callable $set) {
-                            if ($state === 'Completed') {
-                                // Logic for when status is set to Completed
+                            if ($state === 'Pengajuan') {
+                                // Logic for when status is set to Pengajuan
                             }
-                            if ($state === 'Pending') {
-                                // Logic for when status is set to Pending
+                            if ($state === 'Ditolak') {
+                                // Logic for when status is set to Ditolak
                             }
                         }),
-                Forms\Components\TextInput::make('durasi_proyek')
-                        ->label('Durasi Proyek (Minggu)')
-                        ->numeric()
-                        ->disabled()
-                        ->dehydrated()
-                        ->default(fn ($get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
-                        ->formatStateUsing(fn ($state, $get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
-                        ->required(),
+                // Forms\Components\TextInput::make('durasi_proyek')
+                //         ->label('Durasi Proyek (Minggu)')
+                //         ->numeric()
+                //         ->disabled()
+                //         ->dehydrated()
+                //         ->default(fn ($get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
+                //         ->formatStateUsing(fn ($state, $get) => static::calculateDuration($get('tgl_mulai'), $get('tgl_selesai')))
+                //         ->required(),
                     
                 Forms\Components\TextInput::make('jumlah_sdm')->required()->label('Jumlah SDM')->numeric(),
                 Forms\Components\TextInput::make('nilai_proyek')->required()->label('Nilai Proyek')->numeric()->prefix('Rp '),
                 Forms\Components\TextInput::make('link_rab')->nullable()->label('Link RAB'), 
-                Forms\Components\DatePicker::make('tgl_mulai')
-                        ->label('Tanggal Mulai')
-                        ->required()
-                        ->default(now())
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, $set, $get) {
-                            $set('durasi_proyek', static::calculateDuration(
-                                $state, // tanggal mulai baru
-                                $get('tgl_selesai') // tanggal selesai sekarang
-                            ));
-                        }),
+                // Forms\Components\DatePicker::make('tgl_mulai')
+                //         ->label('Tanggal Mulai')
+                //         ->required()
+                //         ->default(now())
+                //         ->reactive()
+                //         ->afterStateUpdated(function ($state, $set, $get) {
+                //             $set('durasi_proyek', static::calculateDuration(
+                //                 $state, // tanggal mulai baru
+                //                 $get('tgl_selesai') // tanggal selesai sekarang
+                //             ));
+                //         }),
             
-                Forms\Components\DatePicker::make('tgl_selesai')
-                        ->label('Tanggal Selesai')
-                        ->required()
-                        ->default(now()->addDays(7))
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, $set, $get) {
-                            $set('durasi_proyek', static::calculateDuration(
-                                $get('tgl_mulai'), // tanggal mulai sekarang
-                                $state // tanggal selesai baru
-                            ));
-                        }),
-                Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')->required(),
-                Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
-                Forms\Components\Select::make('status_pembayaran')
-                        ->options([
-                            'Belum Lunas' => 'Belum Lunas',
-                            'Lunas' => 'Lunas',
-                        ])
-                        ->required()
-                        ->label('Status Pembayaran')
-                        ->default('Belum Lunas'),
+                // Forms\Components\DatePicker::make('tgl_selesai')
+                //         ->label('Tanggal Selesai')
+                //         ->required()
+                //         ->default(now()->addDays(7))
+                //         ->reactive()
+                //         ->afterStateUpdated(function ($state, $set, $get) {
+                //             $set('durasi_proyek', static::calculateDuration(
+                //                 $get('tgl_mulai'), // tanggal mulai sekarang
+                //                 $state // tanggal selesai baru
+                //             ));
+                //         }),
+                // Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')(),
+                // Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
+                // Forms\Components\Select::make('status_pembayaran')
+                //         ->options([
+                //             'Belum Lunas' => 'Belum Lunas',
+                //             'Lunas' => 'Lunas',
+                //         ])
+                //         ->required()
+                //         ->label('Status Pembayaran')
+                //         ->default('Belum Lunas'),
 
                 Forms\Components\FileUpload::make('dokumentasi_foto')
                         ->multiple()
@@ -178,7 +177,7 @@ class MarketingResource extends Resource
                             return "marketing_{$marketingId}_fotoabsen_{$counter}." . $file->getClientOriginalExtension();
                         }),
                 Forms\Components\FileUpload::make('lampiran')->required()->acceptedFileTypes(['application/pdf'])->directory('marketing_lampiran'),
-                Forms\Components\TextInput::make('note')->label('Catatan')->maxLength(255),
+                Forms\Components\Textarea::make('note')->label('Catatan'),
             ]);
     }
 
@@ -220,17 +219,24 @@ class MarketingResource extends Resource
                 Tables\Columns\TextColumn::make('lokasi')->searchable(),
                 Tables\Columns\TextColumn::make('tahap_pengerjaan')->searchable()->sortable()->label('Tahap'),
                 Tables\Columns\TextColumn::make('note')->label('Catatan'),
-                Tables\Columns\TextColumn::make('total_volume')->sortable()->label('Volume'),                
+                Tables\Columns\TextColumn::make('total_volume')->sortable()
+                ->label('Volume')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        ),                
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->sortable()
                     ->searchable()
                     ->color(fn ($state) => match ($state) {
-                        'Completed' => 'success',
+                        'Pengajuan' => 'success',
                         'In Progress' => 'warning',
-                        'Pending' => 'danger',
-                        'On Hold' => 'gray',
+                        'Ditolak' => 'danger',
+                        'Pengerjaan' => 'gray',
+                        'Persiapan Operasional' => 'gray',
                         default => 'secondary',
                     }),
                 //Tables\Columns\TextColumn::make('durasi_proyek')->label('Durasi (Minggu)'),
@@ -240,7 +246,14 @@ class MarketingResource extends Resource
                     ->hidden()
                     ->date()
                     ->sortable(),
-
+                Tables\Columns\TextColumn::make('nilai_akhir_proyek')
+                    ->label('Nilai Akhir Proyek')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('tgl_selesai')
                     ->label('Tanggal Selesai')
                     ->date()
@@ -272,45 +285,59 @@ class MarketingResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('approve')
-                    ->icon('heroicon-o-check')
+    ->icon('heroicon-o-check')
+    ->label('')
+    ->color('success')
+    ->requiresConfirmation()
+    ->modalHeading('Konfirmasi Persetujuan')
+    ->modalDescription('Apakah Anda yakin ingin menyetujui pekerjaan ini? Tindakan ini tidak dapat dibatalkan.')
+    ->modalSubmitActionLabel('Ya, Setujui')
+    ->visible(fn ($record) => 
+        $record
+        && $record->tahap_pengerjaan === 'Kontrak'
+        && $record->status === 'Pengajuan'
+        && (
+            (auth()->user()?->hasRole('Manajer Operasional') && $record->manajer_operasional == 0) ||
+            (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
+        )
+    )
+    ->form(fn () => auth()->user()?->hasRole('Manajer Keuangan') ? [
+                Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')->required()->default(fn ($record) => $record?->nilai_proyek),
+                Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
+                Forms\Components\Select::make('status_pembayaran')
+                        ->options([
+                            'Belum Lunas' => 'Belum Lunas',
+                            'Lunas' => 'Lunas',
+                        ])
+                        ->required()
+                        ->label('Status Pembayaran')
+                        ->default('Belum Lunas'),
+    ] : [])
+    ->action(function ($record, array $data) {
+        $user = auth()->user();
 
-                ->label('')
-                ->color('success')
-                ->requiresConfirmation()
-                ->modalHeading('Konfirmasi Persetujuan')
-                ->modalDescription('Apakah Anda yakin ingin menyetujui pekerjaan ini? Tindakan ini tidak dapat dibatalkan.')
-                ->modalSubmitActionLabel('Ya, Setujui')         
-                ->visible(fn ($record) => 
-                $record
-                && $record->tahap_pengerjaan === 'Kontrak'
-                && $record->status === 'In Progress'
-                && (
-                    (auth()->user()?->hasRole('Manajer Operasional') && $record->manajer_operasional == 0) ||
-                    (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
-                )
-            )            
-            ->action(function ($record) {
-                $user = auth()->user();
-            
-                if ($record && $user) {
-                    if ($user->hasRole('Manajer Operasional')) {
-                        $record->update([
-                            'manajer_operasional' => 1,
-                        ]);
-                    } elseif ($user->hasRole('Manajer Keuangan')) {
-                        $record->update([
-                            'manajer_keuangan' => 1,
-                        ]);
-                    }
-            
-                    // Setelah update manajer_operasional atau manajer_keuangan, cek apakah dua-duanya sudah 1
-                    if ($record->manajer_operasional == 1 && $record->manajer_keuangan == 1) {
-                        $record->update([
-                            'status' => 'Completed',
-                        ]);
-                    }
-                }
-            }),            
+        if ($record && $user) {
+            if ($user->hasRole('Manajer Operasional')) {
+                $record->update([
+                    'manajer_operasional' => 1,
+                ]);
+            } elseif ($user->hasRole('Manajer Keuangan')) {
+                $record->update([
+                    'manajer_keuangan' => 1,
+                    'nilai_akhir_proyek' => $data['nilai_akhir_proyek'] ?? null,
+                    'terms_of_payment' => $data['terms_of_payment'] ?? null,
+                    'status_pembayaran' => $data['status_pembayaran'] ?? null,
+                ]);
+            }
+
+            // Jika keduanya sudah menyetujui
+            if ($record->manajer_operasional == 1 && $record->manajer_keuangan == 1) {
+                $record->update([
+                    'status' => 'Persiapan Operasional',
+                ]);
+            }
+        }
+    }),  
 
                 Tables\Actions\Action::make('reject')
                     ->form([
@@ -321,14 +348,14 @@ class MarketingResource extends Resource
                     ->icon('heroicon-o-x-mark')
                     ->label('')
                     ->color('danger')
-                                    ->requiresConfirmation()
+                ->requiresConfirmation()
                 ->modalHeading('Konfirmasi Persetujuan')
                 ->modalDescription('Apakah Anda yakin ingin menolak pekerjaan ini? Tindakan ini tidak dapat dibatalkan.')
-                ->modalSubmitActionLabel('Ya, Setujui')
+                ->modalSubmitActionLabel('Ya, Tolak')
                 ->visible(fn ($record) => 
                 $record
                 && $record->tahap_pengerjaan === 'Kontrak'
-                && $record->status === 'In Progress'
+                && $record->status === 'Pengajuan'
                 && (
                     (auth()->user()?->hasRole('Manajer Operasional') && $record->manajer_operasional == 0) ||
                     (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
@@ -339,7 +366,7 @@ class MarketingResource extends Resource
 
                     if ($record && $user) {
                         $record->update([
-                            'status' => 'Pending',
+                            'status' => 'Ditolak',
                             'note' => $data['note'] ?? null, // Kalau ada note dari form
                             'manajer_operasional' => 0,
                             'manajer_keuangan' => 0,

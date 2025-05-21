@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Task extends Model
 {
@@ -41,6 +43,7 @@ class Task extends Model
         'target_perday_arsip',
         'telepon',
         'hasil_pemilahan',
+        'total_hari_kerja',
         'marketing_id',
     ];
     public function Telepon()
@@ -61,23 +64,25 @@ class Task extends Model
     protected static function boot()
     {
         parent::boot();
-
+        
         static::saving(function ($task) {
+            $task->total_hari_kerja = $task->getTotalHariKerja();
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
-            $task->hitungStatus();
+            $task->hitungStatus();            
             $task->hitungResiko();  
             $task->hitungTotalStep();   
             $task->hitungTahap();
         });
 
         static::updating(function ($task) {
+            $task->total_hari_kerja = $task->getTotalHariKerja();
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
             $task->hitungStatus();
-            $task->hitungResiko(); 
+            $task->hitungResiko();             
             $task->hitungTotalStep();     
             $task->hitungTahap();
         });
@@ -93,20 +98,28 @@ class Task extends Model
             }
 
             $durasiProyek = $task->durasi_proyek;
+            $totalHariKerja = $task->total_hari_kerja;
+            $task->total_hari_kerja = $task->getTotalHariKerja();
             $jenisTasks = JenisTask::all(); // Assuming you have a model for JenisTask
+            $hariKerjaPerMinggu = $task->getTotalHariKerjaPerMinggu(); // Asumsikan metode ini berada di model Task
         
-            for ($i = 1; $i <= $durasiProyek; $i++) {               
-                    $taskWeek = new TaskWeekOverview();
-                    $taskWeek->task_id = $task->id;
-                    $taskWeek->nama_week = "Week " . $i;
-                    $taskWeek->total_volume = $task->target_perminggu; // Set total_volume from target_perminggu
-                    $taskWeek->volume_dikerjakan = 0; // Set default or calculate as needed
-                    $taskWeek->total_step1 = 0;
-                    $taskWeek->total_step2 = 0;
-                    $taskWeek->total_step3 = 0;
-                    $taskWeek->total_step4 = 0;
-                    $taskWeek->save();                
-            }
+            for ($i = 1; $i <= $durasiProyek; $i++) {
+            $taskWeek = new TaskWeekOverview();
+            $taskWeek->task_id = $task->id;
+            $taskWeek->nama_week = "Week " . $i;
+            $taskWeek->total_volume = $task->target_perminggu; // dari model Task
+            $taskWeek->volume_dikerjakan = 0;
+            $taskWeek->target_minggu = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] * $task->target_perday;
+            $taskWeek->total_step1 = 0;
+            $taskWeek->total_step2 = 0;
+            $taskWeek->total_step3 = 0;
+            $taskWeek->total_step4 = 0;
+
+            // Ambil hari kerja untuk minggu ke-i, default ke 0 jika tidak ada
+            $taskWeek->hari_kerja = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] ?? 0;
+
+            $taskWeek->save();
+        }
         });
     }
 
@@ -132,12 +145,12 @@ class Task extends Model
 
     public function hitungTargetPerHariArsip()
 {
-    if ($this->lama_pekerjaan > 0) {
+    if ($this->total_hari_kerja > 0) {
         $totalArsip = \App\Models\TaskDayDetail::where('task_id', $this->id)
                         ->where('jenis_task_id', 1)
                         ->sum('hasil');
 
-        $this->target_perday_arsip = $totalArsip / $this->lama_pekerjaan;
+        $this->target_perday_arsip = $totalArsip / $this->total_hari_kerja;
     } else {
         $this->target_perday_arsip = 0;
     }
@@ -245,6 +258,86 @@ public function marketing()
 {
     return $this->belongsTo(Marketing::class);
 }
+public function getTotalHariKerja()
+{
+    $start = Carbon::parse($this->tgl_mulai);
+    $end = Carbon::parse($this->tgl_selesai);
+    $periode = CarbonPeriod::create($start, $end);
 
+    // Ambil semua tahun di rentang tgl_mulai - tgl_selesai
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal libur dari API (baik is_cuti true maupun false)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString(); // Normalisasi format
+            }
+        }
+    }
+
+    $hariKerja = 0;
+
+    foreach ($periode as $tanggal) {
+        // Hitung jika bukan Minggu DAN bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $hariKerja++;
+        }
+    }
+
+    return $hariKerja;
+}
+public function getTotalHariKerjaPerMinggu(): array
+{
+    $start = Carbon::parse($this->tgl_mulai);
+    $end = Carbon::parse($this->tgl_selesai);
+    $periode = CarbonPeriod::create($start, $end);
+
+    // Ambil semua tahun yang dicakup dalam periode
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal merah (termasuk cuti)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
+            }
+        }
+    }
+
+    $hasil = [];
+    foreach ($periode as $tanggal) {
+        // Hitung hanya jika bukan Minggu dan bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            // Hitung minggu ke-n dari tgl_mulai
+            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+
+            $key = 'HariKerjaMingguKe' . $mingguKe;
+            if (!isset($hasil[$key])) {
+                $hasil[$key] = 0;
+            }
+
+            $hasil[$key]++;
+        }
+    }
+
+    return $hasil;
+}
 
 }

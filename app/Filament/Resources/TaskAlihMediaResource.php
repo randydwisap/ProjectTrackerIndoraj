@@ -53,7 +53,7 @@ class TaskAlihMediaResource extends Resource
                 ->live()
                 ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
                 ->options(
-                    Marketing::where('status', 'Completed')
+                    Marketing::where('status', 'Persiapan Operasional')
                         ->where('jenis_pekerjaan', 'Alih Media')
                         ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')
@@ -388,7 +388,35 @@ class TaskAlihMediaResource extends Resource
                 ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('lokasi')
+                    ->label('Filter Lokasi')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('lokasi', 'lokasi')->toArray()),
+                SelectFilter::make('pekerjaan')
+                    ->label('Filter Pekerjaan')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('pekerjaan', 'pekerjaan')->toArray()),
+                SelectFilter::make('status')
+                    ->label('Filter Status')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('status', 'status')->toArray()),
+                SelectFilter::make('resiko_keterlambatan')
+                    ->label('Filter Resiko')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('resiko_keterlambatan', 'resiko_keterlambatan')->toArray()),
+                SelectFilter::make('tahap_pengerjaan')
+                    ->label('Filter Tahap')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('tahap_pengerjaan', 'tahap_pengerjaan')->toArray()),
+                SelectFilter::make('project_manager')
+                    ->label('Filter PM')
+                    ->searchable()
+                    ->options(fn () => \App\Models\User::pluck('name', 'id')->toArray()),
+                SelectFilter::make('jenis_arsip')
+                    ->label('Filter Jenis Arsip')
+                    ->searchable()
+                    ->options(fn () => TaskAlihMedia::query()->distinct()->pluck('jenis_arsip', 'jenis_arsip')->toArray()),
+                
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -489,9 +517,9 @@ class TaskAlihMediaResource extends Resource
     /**
      * Override metode create untuk mengubah status marketing menjadi "on hold"
      */
-    public static function create(array $data): Task
+    public static function create(array $data): TaskAlihMedia
     {
-        $task = Task::create($data);
+        $task = TaskAlihMedia::create($data);
 
         // Update status marketing menjadi "On Hold" dan log status
         Log::info('Updating marketing status to On Hold for marketing_id: ' . $data['marketing_id']);
@@ -509,7 +537,7 @@ class TaskAlihMediaResource extends Resource
     /**
      * Override metode update untuk mengubah status marketing menjadi "on hold"
      */
-    public static function update(array $data, Task $record): Task
+    public static function update(array $data, TaskAlihMedia $record): TaskAlihMedia
     {
         $record->update($data);
 

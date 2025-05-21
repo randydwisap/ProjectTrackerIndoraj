@@ -58,7 +58,7 @@ class TaskFumigasiResource extends Resource
                 ->live()
                 ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
                 ->options(
-                    Marketing::where('status', 'Completed')
+                    Marketing::where('status', 'Persiapan Operasional')
                         ->where('jenis_pekerjaan', 'Fumigasi')
                         ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')

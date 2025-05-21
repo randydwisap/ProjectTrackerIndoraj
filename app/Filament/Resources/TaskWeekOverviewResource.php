@@ -81,32 +81,76 @@ class TaskWeekOverviewResource extends Resource
                 ->label('Week')
                 ->sortable()
                 ->searchable(),
+               Tables\Columns\TextColumn::make('target_minggu') // Display nama_task from jenis_task
+                ->label('Target')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
+                ->sortable()
+                ->searchable(),
                 Tables\Columns\TextColumn::make('volume_dikerjakan') // Display nama_task from jenis_task
                 ->label('Dikerjakan')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('arsip') // Display nama_task from jenis_task
                 ->label('Arsip')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('inarsip') // Display nama_task from jenis_task
                 ->label('Inarsip')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step1') // Display nama_task from jenis_task
                 ->label('Pemilahan dan Identifikasi')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step2') // Display nama_task from jenis_task
                 ->label('Manuver dan Pemberkasan')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step3') // Display nama_task from jenis_task
                 ->label('Input Data')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step4') // Display nama_task from jenis_task
                 ->label('Pelabelan dan Penataan')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('status')

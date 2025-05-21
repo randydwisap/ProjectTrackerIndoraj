@@ -12,7 +12,9 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\TaskResource\Pages;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Http;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Builder;
@@ -60,7 +62,7 @@ class TaskResource extends Resource
                 ->live()
                 ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
                 ->options(
-                    Marketing::where('status', 'Completed')
+                    Marketing::where('status', 'Persiapan Operasional')
                         ->where('jenis_pekerjaan', 'Pengolahan Arsip')
                         ->where('project_manager', auth()->user()->id)
                         ->pluck('nama_pekerjaan', 'id')
@@ -71,9 +73,7 @@ class TaskResource extends Resource
                     if ($marketing) {
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
-                        $set('lokasi', $marketing->lokasi);                        
-                        $set('tgl_mulai', $marketing->tgl_mulai);
-                        $set('tgl_selesai', $marketing->tgl_selesai);
+                        $set('lokasi', $marketing->lokasi);                     
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);                    
                         $set('volume_arsip', $marketing->total_volume);                       
@@ -153,6 +153,15 @@ class TaskResource extends Resource
                 ->required(),
 
             Forms\Components\Hidden::make('nilai_proyek'),
+
+            Forms\Components\TextInput::make('total_hari_kerja')
+                ->label('Total Hari Kerja')
+                ->numeric()
+                ->disabled()
+                ->default(fn ($get) => static::calculateTotalHariKerja($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTotalHariKerja($get))
+                ->required(),
+
             Forms\Components\TextInput::make('lama_pekerjaan')
                 ->label('Lama Pekerjaan (Hari)')
                 ->numeric()
@@ -191,12 +200,14 @@ class TaskResource extends Resource
                 ->label('Volume Arsip (mL)')
                 ->prefix('mL ')
                 ->numeric()
+                ->inputMode('decimal')
                 ->required(),
             Forms\Components\TextInput::make('hasil_pemilahan')
                 ->label('Volume Arsip Pemilahan(mL)')
                 ->prefix('mL ')
                 ->hidden()
                 ->numeric()
+                ->inputMode('decimal')
                 ->required(),
 
             Forms\Components\Select::make('jenis_arsip')
@@ -211,6 +222,7 @@ class TaskResource extends Resource
             Forms\Components\TextInput::make('target_perminggu')
                 ->label('Target Perminggu (mL)')
                 ->numeric()
+                ->inputMode('decimal')
                 ->disabled()
                 ->default(fn ($get) => static::calculateTargetPerminggu($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
@@ -220,6 +232,7 @@ class TaskResource extends Resource
             Forms\Components\TextInput::make('target_perday')
                 ->label('Target Perhari (mL)')
                 ->numeric()
+                ->inputMode('decimal')
                 ->disabled()
                 ->default(fn ($get) => static::calculateTargetPerDay($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
@@ -302,6 +315,10 @@ class TaskResource extends Resource
                 Tables\Columns\TextColumn::make('lama_pekerjaan')
                     ->label('Lama Pekerjaan (Hari)')
                     ->sortable(),
+                                
+                Tables\Columns\TextColumn::make('total_hari_kerja')
+                    ->label('Hari Kerja')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('jumlah_sdm')
                     ->label('Tot. SDM')
@@ -331,10 +348,20 @@ class TaskResource extends Resource
 
                 Tables\Columns\TextColumn::make('volume_arsip')
                     ->label('Total Volume (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('volume_dikerjakan')
                     ->label('Volume Dikerjakan (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 ProgressBar::make('dikerjakan_step1')
@@ -387,6 +414,11 @@ class TaskResource extends Resource
 
                 Tables\Columns\TextColumn::make('hasil_pemilahan')
                     ->label('Hasil Volume Arsip (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('jenis_arsip')
@@ -399,18 +431,38 @@ class TaskResource extends Resource
 
                 Tables\Columns\TextColumn::make('target_perminggu')
                     ->label('Target Perminggu (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('target_perminggu_arsip')
                     ->label('Target Perminggu Arsip (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('target_perday')
                     ->label('Target Perhari (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('target_perday_arsip')
                     ->label('Target Perhari Arsip (mL)')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
             ])
             ->filters([
@@ -487,6 +539,7 @@ class TaskResource extends Resource
     {
         $set('durasi_proyek', self::calculateDuration($get));
         $set('lama_pekerjaan', self::calculateLamaPekerjaan($get));
+        $set('total_hari_kerja', self::calculateTotalHariKerja($get));
     }
 
     public static function getPages(): array
@@ -507,19 +560,19 @@ class TaskResource extends Resource
             return 0;
         }
 
-        return round($volumeArsip / $durasiProyek, 2);
+        return $volumeArsip / $durasiProyek;
     }
 
     public static function calculateTargetPerDay($get)
     {
         $volumeArsip = (float) $get('volume_arsip');
-        $lamaPekerjaan = (int) $get('lama_pekerjaan');
+        $total_hari_kerja = (int) $get('total_hari_kerja');
 
-        if ($lamaPekerjaan <= 0) {
+        if ($total_hari_kerja <= 0) {
             return 0;
         }
 
-        return round($volumeArsip / $lamaPekerjaan, 2);
+        return $volumeArsip / $total_hari_kerja;
     }
 
     /**
@@ -528,6 +581,7 @@ class TaskResource extends Resource
     public static function updateTargetPerminggu(callable $set, $get)
     {
         $set('target_perminggu', self::calculateTargetPerminggu($get));
+        $set('target_perday', self::calculateTargetPerDay($get));
     }
 
     /**
@@ -569,4 +623,46 @@ class TaskResource extends Resource
 
         return $record;
     }
+public static function calculateTotalHariKerja($get): int
+{
+    if (!$get('tgl_mulai') || !$get('tgl_selesai')) {
+        return 0;
+    }
+
+    $start = Carbon::parse($get('tgl_mulai'));
+    $end = Carbon::parse($get('tgl_selesai'));
+    $periode = CarbonPeriod::create($start, $end);
+
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    
+    // Ambil semua tanggal libur dari API (baik is_cuti true maupun false)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString(); // Normalisasi format
+            }
+        }
+    }
+
+    $hariKerja = 0;
+
+    foreach ($periode as $tanggal) {
+        // Hitung jika bukan Minggu DAN bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $hariKerja++;
+        }
+    }
+
+    return $hariKerja;
+}
+    
 }

@@ -83,6 +83,7 @@ class TaskDayDetailResource extends Resource
 
                 Forms\Components\TextInput::make('output')
                 ->numeric()
+                ->inputMode('decimal')
                 ->required()
                 ->label('Volume Dikerjakan')
                 ->reactive()
@@ -123,6 +124,7 @@ class TaskDayDetailResource extends Resource
             
                 Forms\Components\TextInput::make('hasil')
                 ->numeric()
+                ->inputMode('decimal')
                 ->label('Hasil Arsip')
                 ->reactive()
                 ->readonly(fn ($get) => $get('jenis_task_id') != 1) // Nonaktifkan field jika jenis task bukan 1
@@ -132,6 +134,7 @@ class TaskDayDetailResource extends Resource
             
             Forms\Components\TextInput::make('hasil_inarsip')
                 ->numeric()
+                ->inputMode('decimal')
                 ->label('Hasil Inarsip')
                 ->readOnly(),
             
@@ -175,12 +178,27 @@ class TaskDayDetailResource extends Resource
 
                 Tables\Columns\TextColumn::make('output')
                     ->label('Dikerjakan')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('hasil')
                     ->label('Arsip')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('hasil_inarsip')
                     ->label('Inarsip')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')

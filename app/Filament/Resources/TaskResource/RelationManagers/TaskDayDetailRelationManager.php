@@ -49,6 +49,7 @@ class TaskDayDetailRelationManager extends RelationManager
             Forms\Components\TextInput::make('output')
                 ->label('Volume Dikerjakan')
                 ->numeric()
+                ->inputMode('decimal')
                 ->required()
                 ->reactive()
                 ->afterStateUpdated(function ($set, $get) {
@@ -89,6 +90,7 @@ class TaskDayDetailRelationManager extends RelationManager
             Forms\Components\TextInput::make('hasil')
                 ->label('Hasil Arsip')
                 ->numeric()
+                ->inputMode('decimal')
                 ->reactive()
                 ->readonly(fn ($get) => $get('jenis_task_id') != 1) // Nonaktifkan field jika jenis task bukan 1
                 ->afterStateUpdated(fn ($set, $get) =>
@@ -98,6 +100,7 @@ class TaskDayDetailRelationManager extends RelationManager
             Forms\Components\TextInput::make('hasil_inarsip')
                 ->label('Hasil Inarsip')
                 ->numeric()
+                ->inputMode('decimal')
                 ->readOnly(),
 
             Forms\Components\Select::make('status')
@@ -139,14 +142,29 @@ class TaskDayDetailRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('output')
                     ->label('Dikerjakan')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('hasil')
                     ->label('Arsip')
+                     ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('hasil_inarsip')
                     ->label('Inarsip')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')

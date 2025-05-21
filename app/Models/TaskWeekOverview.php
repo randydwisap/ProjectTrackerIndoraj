@@ -17,10 +17,12 @@ class TaskWeekOverview extends Model
         'volume_dikerjakan',
         'arsip',
         'inarsip',
+        'target_minggu',
         'total_step1',
         'total_step2',
         'total_step3',
         'total_step4',
+        
     ];
 
 // Di dalam model TaskWeekOverview
@@ -39,8 +41,8 @@ protected static function booted()
         $task = $weekOverview->task;
 
         // ✅ Perhitungan status berdasarkan volume_dikerjakan
-        if ($task && $task->target_perminggu > 0) {
-            $persentase = ($weekOverview->volume_dikerjakan / $task->target_perminggu) * 100;
+        if ($task && $weekOverview->target_minggu > 0) {
+            $persentase = ($weekOverview->volume_dikerjakan / $weekOverview->target_minggu) * 100;
 
             if ($persentase >= 100) {
                 $weekOverview->status = 'On Track';
