@@ -616,7 +616,7 @@ public static function calculateDuration($get)
             return 0;
         }
 
-        return $volumeArsip / $durasiProyek;
+        return $volumeArsip * 4 / $durasiProyek;
     }
 
     public static function calculateTargetPerDay($get)
@@ -628,7 +628,7 @@ public static function calculateDuration($get)
             return 0;
         }
 
-        return $volumeArsip / $total_hari_kerja;
+        return $volumeArsip*4 / $total_hari_kerja;
     }
 
     /**

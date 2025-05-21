@@ -180,7 +180,7 @@ public function hitungDurasiDanLamaPekerjaan()
                         ->where('jenis_task_id', 1)
                         ->sum('hasil');
 
-        $this->target_perday_arsip = $totalArsip / $this->total_hari_kerja;
+        $this->target_perday_arsip = $totalArsip*3 / $this->total_hari_kerja;
     } else {
         $this->target_perday_arsip = 0;
     }
@@ -193,7 +193,7 @@ public function hitungTargetPerMingguArsip()
                         ->where('jenis_task_id', 1)
                         ->sum('hasil');
 
-        $this->target_perminggu_arsip = $totalArsip / $this->durasi_proyek;
+        $this->target_perminggu_arsip = $totalArsip*3 / $this->durasi_proyek;
     } else {
         $this->target_perminggu_arsip = 0;
     }
