@@ -91,6 +91,15 @@ class TaskWeekAlihMediaResource extends Resource
                 ->label('Week')
                 ->sortable()
                 ->searchable(),
+                Tables\Columns\TextColumn::make('total_volume') // Display nama_task from jenis_task
+                ->label('Target')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
+                ->sortable()
+                ->searchable(),
                 Tables\Columns\TextColumn::make('volume_dikerjakan') // Display nama_task from jenis_task
                 ->label('Dikerjakan')
                 ->numeric(

@@ -320,7 +320,7 @@ class TaskAlihMediaResource extends Resource
                 ->label('Lama Pekerjaan (Hari)')
                 ->sortable(),
             Tables\Columns\TextColumn::make('total_hari_kerja')
-                ->label('Lama Pekerjaan (Hari)')
+                ->label('Total Hari Kerja')
                 ->sortable(),
             Tables\Columns\TextColumn::make('jumlah_sdm')
                 ->label('Tot. SDM')

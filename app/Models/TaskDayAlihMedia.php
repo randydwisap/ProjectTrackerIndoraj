@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TaskDayAlihMedia extends Model
 {
     use HasFactory;
-    protected $fillable = ['task_week_alih_media_id', 'tanggal', 'output', 'status', 'task_alih_media_id', 'jenis_task_alih_media_id',];
+    protected $fillable = ['task_week_alih_media_id', 'tanggal', 'output', 'status', 'task_alih_media_id', 'jenis_task_alih_media_id','total_hari_kerja'];
 
     public function taskWeekAlihMedia()
     {
