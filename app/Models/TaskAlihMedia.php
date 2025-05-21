@@ -62,7 +62,7 @@ class TaskAlihMedia extends Model
         parent::boot();
 
         static::saving(function ($taskAlihMedia) {
-            
+            $taskAlihMedia->total_hari_kerja = $taskAlihMedia->getTotalHariKerja();
             $taskAlihMedia->hitungDurasiDanLamaPekerjaan();
             $taskAlihMedia->hitungStatus();
             $taskAlihMedia->hitungResiko();  
@@ -71,7 +71,7 @@ class TaskAlihMedia extends Model
         });
 
         static::updating(function ($taskAlihMedia) {
-            
+            $taskAlihMedia->total_hari_kerja = $taskAlihMedia->getTotalHariKerja();
             $taskAlihMedia->hitungDurasiDanLamaPekerjaan();
             $taskAlihMedia->hitungStatus();
             $taskAlihMedia->hitungResiko(); 
@@ -173,7 +173,7 @@ class TaskAlihMedia extends Model
     ) {
             $this->status = 'Completed';
         } elseif ($this->volume_arsip > 0) {
-            $persentase = ($this->volume_dikerjakan / $this->volume_arsip * 3) * 100;
+            $persentase = ($this->volume_dikerjakan / $this->volume_arsip * 4) * 100;
     
             if ($persentase >= 50) {
                 $this->status = 'Behind Schedule';

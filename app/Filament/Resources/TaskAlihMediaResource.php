@@ -569,7 +569,7 @@ class TaskAlihMediaResource extends Resource
 
     public static function calculateTargetPerminggu($get)
     {
-        $volumeArsip = (float) $get('volume_arsip');
+        $volumeArsip = (float) $get('volume_arsip') * 4;
         $durasiProyek = (int) $get('durasi_proyek');
 
         if ($durasiProyek <= 0) {
@@ -581,7 +581,7 @@ class TaskAlihMediaResource extends Resource
 
     public static function calculateTargetPerDay($get)
     {
-        $volumeArsip = (float) $get('volume_arsip');
+        $volumeArsip = (float) $get('volume_arsip')*4;
         $lamaPekerjaan = (int) $get('total_hari_kerja');
 
         if ($lamaPekerjaan <= 0) {
