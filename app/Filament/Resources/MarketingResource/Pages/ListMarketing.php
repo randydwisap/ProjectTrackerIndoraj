@@ -21,41 +21,42 @@ class ListMarketing extends ListRecords
             Actions\CreateAction::make()
                 ->label('Tambah Proyek'),
                 
-            Action::make('settings')
-                ->label('Settings')
-                ->icon('heroicon-o-cog-6-tooth')
-                ->form([
-                    TextInput::make('ppn')
-                        ->label('PPN (%)')
-                        ->numeric()
-                        ->required()
-                        ->default(fn () => Setting::first()->ppn ?? 11.00)
-                        ->minValue(0)
-                        ->maxValue(100)
-                        ->suffix('%'),
-                    TextInput::make('pph')
-                        ->label('PPH (%)')
-                        ->numeric()
-                        ->required()
-                        ->default(fn () => Setting::first()->pph ?? 2.00)
-                        ->minValue(0)
-                        ->maxValue(100)
-                        ->suffix('%')
-                ])
-                ->action(function (array $data) {
-                        Setting::updateOrCreate(
-                    ['id' => 1],
-                    [
-                        'ppn' => $data['ppn'],
-                        'pph' => $data['pph']
-                    ]
-                );
-                    
-                    Notification::make()
-                        ->title('Settings saved successfully')
-                        ->success()
-                        ->send();
-                }),
+Action::make('settings')
+    ->label('Settings')
+    ->icon('heroicon-o-cog-6-tooth')
+    ->visible(fn () => auth()->user()->hasRole('Manajer Keuangan')) // Tambahkan ini
+    ->form([
+        TextInput::make('ppn')
+            ->label('PPN (%)')
+            ->numeric()
+            ->required()
+            ->default(fn () => Setting::first()->ppn ?? 11.00)
+            ->minValue(0)
+            ->maxValue(100)
+            ->suffix('%'),
+        TextInput::make('pph')
+            ->label('PPH (%)')
+            ->numeric()
+            ->required()
+            ->default(fn () => Setting::first()->pph ?? 2.00)
+            ->minValue(0)
+            ->maxValue(100)
+            ->suffix('%')
+    ])
+    ->action(function (array $data) {
+        Setting::updateOrCreate(
+            ['id' => 1],
+            [
+                'ppn' => $data['ppn'],
+                'pph' => $data['pph']
+            ]
+        );
+        
+        Notification::make()
+            ->title('Settings saved successfully')
+            ->success()
+            ->send();
+    }),
                 
             Actions\Action::make('approve')
                 ->label('Approve')

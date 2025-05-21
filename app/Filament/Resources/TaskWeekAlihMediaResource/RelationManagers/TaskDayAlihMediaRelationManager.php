@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\TaskWeekAlihMediaResource\RelationManagers;
 
-use App\Models\JenisTask;
+use App\Models\JenisTaskAlihMedia;
 use App\Models\Task;
 use Filament\Forms;
 use Filament\Tables;
@@ -38,6 +38,7 @@ class TaskDayAlihMediaRelationManager extends RelationManager
             // Volume Dikerjakan
             Forms\Components\TextInput::make('output')
                 ->label('Volume Dikerjakan')
+                ->inputMode('decimal')
                 ->numeric()
                 ->required()
                 ->reactive(),                
@@ -71,6 +72,11 @@ class TaskDayAlihMediaRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('output')
                     ->label('Dikerjakan')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')

@@ -49,6 +49,7 @@ class TaskDayAlihMediaRelationManager extends RelationManager
             Forms\Components\TextInput::make('output')
                 ->label('Volume Dikerjakan')
                 ->numeric()
+                ->inputMode('decimal')
                 ->required()
                 ->reactive(),
 
@@ -91,6 +92,11 @@ class TaskDayAlihMediaRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('output')
                     ->label('Dikerjakan')
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')

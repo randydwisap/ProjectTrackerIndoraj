@@ -118,21 +118,50 @@ class TaskAlihMedia extends Model
      * Menghitung durasi proyek dalam minggu dan lama pekerjaan dalam hari.
      */
     public function hitungDurasiDanLamaPekerjaan()
-    {
-        if ($this->tgl_mulai && $this->tgl_selesai) {
-            $start = Carbon::parse($this->tgl_mulai);
-            $end = Carbon::parse($this->tgl_selesai);
-            
-            // Hitung lama pekerjaan dalam hari
-            $this->lama_pekerjaan = $start->diffInDays($end);
-            
-            // Hitung durasi proyek dalam minggu
-            $this->durasi_proyek = ceil($this->lama_pekerjaan / 7);
-        } else {
-            $this->lama_pekerjaan = 0;
-            $this->durasi_proyek = 0;
+{
+    if ($this->tgl_mulai && $this->tgl_selesai) {
+        $start = Carbon::parse($this->tgl_mulai);
+        $end = Carbon::parse($this->tgl_selesai);
+        $periode = CarbonPeriod::create($start, $end);
+
+        // Hitung lama pekerjaan (total hari kalender)
+        $this->lama_pekerjaan = $start->diffInDays($end);
+
+        // Ambil semua tahun dalam periode
+        $years = range($start->year, $end->year);
+        $tanggalMerah = [];
+
+        foreach ($years as $year) {
+            $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                foreach ($data as $item) {
+                    $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
+                }
+            }
         }
+
+        // Hitung minggu kerja aktif
+        $mingguAktif = [];
+
+        foreach ($periode as $tanggal) {
+            if (
+                $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+                !in_array($tanggal->toDateString(), $tanggalMerah)
+            ) {
+                $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+                $mingguAktif[$mingguKe] = true;
+            }
+        }
+
+        $this->durasi_proyek = count($mingguAktif);
+    } else {
+        $this->lama_pekerjaan = 0;
+        $this->durasi_proyek = 0;
     }
+}
 
     public function hitungStatus()
     {

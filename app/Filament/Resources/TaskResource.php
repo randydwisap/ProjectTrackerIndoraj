@@ -529,20 +529,52 @@ class TaskResource extends Resource
             ]);
     }
 
-    public static function calculateDuration($get)
-    {
-        $tglMulai = $get('tgl_mulai');
-        $tglSelesai = $get('tgl_selesai');
+public static function calculateDuration($get)
+{
+    $tglMulai = $get('tgl_mulai');
+    $tglSelesai = $get('tgl_selesai');
 
-        if (!$tglMulai || !$tglSelesai) {
-            return 0;
-        }
-
-        $start = Carbon::parse($tglMulai);
-        $end = Carbon::parse($tglSelesai);
-
-        return ceil($start->diffInDays($end) / 7);
+    if (!$tglMulai || !$tglSelesai) {
+        return 0;
     }
+
+    $start = Carbon::parse($tglMulai);
+    $end = Carbon::parse($tglSelesai);
+    $periode = CarbonPeriod::create($start, $end);
+
+    // Ambil semua tahun yang dicakup
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal merah
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
+            }
+        }
+    }
+
+    // Hitung minggu ke-n yang memiliki hari kerja
+    $mingguAktif = [];
+
+    foreach ($periode as $tanggal) {
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+            $mingguAktif[$mingguKe] = true; // gunakan array sebagai set
+        }
+    }
+
+    return count($mingguAktif); // jumlah minggu yang punya hari kerja
+}
+
 
     public static function calculateLamaPekerjaan($get)
     {

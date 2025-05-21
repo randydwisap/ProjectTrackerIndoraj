@@ -247,16 +247,16 @@ class MarketingResource extends Resource
                     ->date()
                     ->sortable(),
               Tables\Columns\TextColumn::make('nilai_proyek')
-                    ->label('Nilai Awal Proyek')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->label('Nilai Penawaran')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia
                     )
                     ->sortable(),                    
                 Tables\Columns\TextColumn::make('nilai_akhir_proyek')
-                    ->label('Nilai Akhir Proyek')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->label('Nilai Proyek')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia
@@ -264,7 +264,7 @@ class MarketingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dasar_pengenaan_pajak')
                     ->label('DPP')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia
@@ -272,7 +272,7 @@ class MarketingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('ppn')
                     ->label('PPN')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia
@@ -280,7 +280,7 @@ class MarketingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pph')
                     ->label('PPH')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia
@@ -288,7 +288,7 @@ class MarketingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('pencairan')
                     ->label('Pencairan')
-                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'super_admin']))
                     ->money(
                         currency: 'IDR',
                         locale: 'id', // Format Indonesia

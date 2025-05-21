@@ -210,6 +210,7 @@ class TaskAlihMediaResource extends Resource
             Forms\Components\TextInput::make('volume_arsip')
                 ->label('Volume Arsip (Halaman)')
                 ->prefix('mL ')
+                ->inputMode('decimal')
                 ->numeric()
                 ->required(),
 
@@ -225,6 +226,7 @@ class TaskAlihMediaResource extends Resource
             Forms\Components\TextInput::make('target_perminggu')
                 ->label('Target Perminggu (Halaman)')
                 ->numeric()
+                ->inputMode('decimal')
                 ->disabled()
                 ->default(fn ($get) => static::calculateTargetPerminggu($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
@@ -235,6 +237,7 @@ class TaskAlihMediaResource extends Resource
                 ->label('Target Perhari (Halaman)')
                 ->numeric()
                 ->disabled()
+                ->inputMode('decimal')
                 ->default(fn ($get) => static::calculateTargetPerDay($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
                 ->dehydrated()
@@ -347,10 +350,20 @@ class TaskAlihMediaResource extends Resource
 
             Tables\Columns\TextColumn::make('volume_arsip')
                 ->label('Total Volume (Halaman)')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable(),
             
             Tables\Columns\TextColumn::make('volume_dikerjakan')
                 ->label('Volume Dikerjakan (Halaman)')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable(),
 
             ProgressBar::make('dikerjakan_step1')
@@ -411,9 +424,19 @@ class TaskAlihMediaResource extends Resource
 
             Tables\Columns\TextColumn::make('target_perminggu')
                 ->label('Target Perminggu (Halaman)')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable(),
 
             Tables\Columns\TextColumn::make('target_perday')
+            ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->label('Target Perhari (Halaman)')
                 ->sortable(),
             ])
@@ -477,19 +500,50 @@ class TaskAlihMediaResource extends Resource
 
 
     public static function calculateDuration($get)
-    {
-        $tglMulai = $get('tgl_mulai');
-        $tglSelesai = $get('tgl_selesai');
+{
+    $tglMulai = $get('tgl_mulai');
+    $tglSelesai = $get('tgl_selesai');
 
-        if (!$tglMulai || !$tglSelesai) {
-            return 0;
-        }
-
-        $start = Carbon::parse($tglMulai);
-        $end = Carbon::parse($tglSelesai);
-
-        return ceil($start->diffInDays($end) / 7);
+    if (!$tglMulai || !$tglSelesai) {
+        return 0;
     }
+
+    $start = Carbon::parse($tglMulai);
+    $end = Carbon::parse($tglSelesai);
+    $periode = CarbonPeriod::create($start, $end);
+
+    // Ambil semua tahun yang dicakup
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal merah
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
+            }
+        }
+    }
+
+    // Hitung minggu ke-n yang memiliki hari kerja
+    $mingguAktif = [];
+
+    foreach ($periode as $tanggal) {
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+            $mingguAktif[$mingguKe] = true; // gunakan array sebagai set
+        }
+    }
+
+    return count($mingguAktif); // jumlah minggu yang punya hari kerja
+}
 
     public static function calculateLamaPekerjaan($get)
     {

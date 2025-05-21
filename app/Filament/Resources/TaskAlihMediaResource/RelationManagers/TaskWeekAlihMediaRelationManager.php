@@ -26,24 +26,58 @@ class TaskWeekAlihMediaRelationManager extends RelationManager
                 ->label('Week')
                 ->sortable()
                 ->searchable(),
+                Tables\Columns\TextColumn::make('total_volume')
+                    ->label('Target')
+                    ->sortable()
+                    ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('volume_dikerjakan') // Display nama_task from jenis_task
                 ->label('Dikerjakan')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step1') // Display nama_task from jenis_task
                 ->label('Scanning')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step2') // Display nama_task from jenis_task
                 ->label('Quality Control')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step3') // Display nama_task from jenis_task
                 ->label('Input Data')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('total_step4') // Display nama_task from jenis_task
                 ->label('Upload Data Hyperlink')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('status')
