@@ -12,7 +12,9 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\TaskAlihMediaResource\Pages;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Http;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Builder;
@@ -64,9 +66,7 @@ class TaskAlihMediaResource extends Resource
                     if ($marketing) {
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
-                        $set('lokasi', $marketing->lokasi);                        
-                        $set('tgl_mulai', $marketing->tgl_mulai);
-                        $set('tgl_selesai', $marketing->tgl_selesai);
+                        $set('lokasi', $marketing->lokasi);              
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);                    
                         $set('volume_arsip', $marketing->total_volume);                       
@@ -121,6 +121,7 @@ class TaskAlihMediaResource extends Resource
 
             Forms\Components\DatePicker::make('tgl_mulai')
                 ->label('Tanggal Mulai')
+                ->live()
                 ->required()
                 ->default(now())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
@@ -131,6 +132,7 @@ class TaskAlihMediaResource extends Resource
             Forms\Components\DatePicker::make('tgl_selesai')
                 ->label('Tanggal Selesai')
                 ->required()
+                ->live()
                 ->default(now())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -152,6 +154,13 @@ class TaskAlihMediaResource extends Resource
                 ->disabled()
                 ->default(fn ($get) => static::calculateLamaPekerjaan($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
+                ->required(),
+            Forms\Components\TextInput::make('total_hari_kerja')
+                ->label('Total Hari Kerja')
+                ->numeric()
+                ->disabled()
+                ->default(fn ($get) => static::calculateTotalHariKerja($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTotalHariKerja($get))
                 ->required(),
 
             Forms\Components\Select::make('project_manager')
@@ -175,9 +184,28 @@ class TaskAlihMediaResource extends Resource
                 ->url()
                 ->nullable(),
 
-            Forms\Components\TextInput::make('lokasi')
-                ->label('Lokasi')
-                ->required(),
+            Forms\Components\Select::make('lokasi')
+                    ->label('Pilih Kota')
+                    ->searchable()
+                    ->getSearchResultsUsing(function (string $search) {
+                        $url = "https://alamat.thecloudalert.com/api/kabkota/get/";
+                        $response = Http::get($url);
+                
+                        if ($response->successful()) {
+                            $data = collect($response->json()['result']);
+                
+                            // Filter berdasarkan pencarian
+                            if ($search) {
+                                $data = $data->filter(fn($item) => stripos($item['text'], $search) !== false);
+                            }
+                
+                            // Return dalam format key-value (id => nama)
+                            return $data->mapWithKeys(fn($item) => [$item['text'] => $item['text']])->toArray();
+                        }
+                
+                        return [];
+                    })
+                    ->required(),
 
             Forms\Components\TextInput::make('volume_arsip')
                 ->label('Volume Arsip (Halaman)')
@@ -288,7 +316,9 @@ class TaskAlihMediaResource extends Resource
             Tables\Columns\TextColumn::make('lama_pekerjaan')
                 ->label('Lama Pekerjaan (Hari)')
                 ->sortable(),
-
+            Tables\Columns\TextColumn::make('total_hari_kerja')
+                ->label('Lama Pekerjaan (Hari)')
+                ->sortable(),
             Tables\Columns\TextColumn::make('jumlah_sdm')
                 ->label('Tot. SDM')
                 ->sortable(),
@@ -480,6 +510,7 @@ class TaskAlihMediaResource extends Resource
     {
         $set('durasi_proyek', self::calculateDuration($get));
         $set('lama_pekerjaan', self::calculateLamaPekerjaan($get));
+        $set('total_hari_kerja', self::calculateTotalHariKerja($get));
     }
 
     public static function calculateTargetPerminggu($get)
@@ -497,7 +528,7 @@ class TaskAlihMediaResource extends Resource
     public static function calculateTargetPerDay($get)
     {
         $volumeArsip = (float) $get('volume_arsip');
-        $lamaPekerjaan = (int) $get('lama_pekerjaan');
+        $lamaPekerjaan = (int) $get('total_hari_kerja');
 
         if ($lamaPekerjaan <= 0) {
             return 0;
@@ -512,6 +543,7 @@ class TaskAlihMediaResource extends Resource
     public static function updateTargetPerminggu(callable $set, $get)
     {
         $set('target_perminggu', self::calculateTargetPerminggu($get));
+        $set('target_perday', self::calculateTargetPerDay($get));
     }
 
     /**
@@ -526,7 +558,7 @@ class TaskAlihMediaResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }
@@ -546,11 +578,52 @@ class TaskAlihMediaResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }
 
         return $record;
     }
+    public static function calculateTotalHariKerja($get): int
+{
+    if (!$get('tgl_mulai') || !$get('tgl_selesai')) {
+        return 0;
+    }
+
+    $start = Carbon::parse($get('tgl_mulai'));
+    $end = Carbon::parse($get('tgl_selesai'));
+    $periode = CarbonPeriod::create($start, $end);
+
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    
+    // Ambil semua tanggal libur dari API (baik is_cuti true maupun false)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString(); // Normalisasi format
+            }
+        }
+    }
+
+    $hariKerja = 0;
+
+    foreach ($periode as $tanggal) {
+        // Hitung jika bukan Minggu DAN bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $hariKerja++;
+        }
+    }
+
+    return $hariKerja;
+}
 }

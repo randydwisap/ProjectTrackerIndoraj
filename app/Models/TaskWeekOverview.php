@@ -53,13 +53,15 @@ protected static function booted()
             }
         }
 
-        // ✅ Hitung jumlah taskDayDetails dengan status "On Track"
-        $jumlahOnTrack = \App\Models\TaskDayDetail::where('task_week_overview_id', $weekOverview->id)
-            ->where('status', 'On Track')
-            ->count();
+    $jumlahOnTrack = \App\Models\TaskDayDetail::where('task_week_overview_id', $weekOverview->id)
+        ->where('status', 'On Track')
+        ->select('tanggal')
+        ->groupBy('tanggal')
+        ->get()
+        ->count();
 
         // ✅ Hitung total jumlah detail harian dalam weekOverview ini
-        $totalDetails = \App\Models\TaskDayDetail::where('task_week_overview_id', $weekOverview->id)->count();
+        $totalDetails = \App\Models\TaskDayDetail::where('task_week_overview_id', $weekOverview->id)->groupBy('tanggal')->count();
 
         // ✅ Update resiko_keterlambatan berdasarkan jumlah On Track
         if ($jumlahOnTrack === $totalDetails && $totalDetails > 0) {

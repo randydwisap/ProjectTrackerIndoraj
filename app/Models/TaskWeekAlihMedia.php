@@ -20,6 +20,7 @@ class TaskWeekAlihMedia extends Model
         'total_step2',
         'total_step3',
         'total_step4',
+        'hari_kerja',
     ];
 
     public function taskDayAlihMedia()

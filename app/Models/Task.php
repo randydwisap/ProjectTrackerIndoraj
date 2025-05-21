@@ -65,8 +65,7 @@ class Task extends Model
     {
         parent::boot();
         
-        static::saving(function ($task) {
-            $task->total_hari_kerja = $task->getTotalHariKerja();
+        static::saving(function ($task) {            
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
@@ -76,8 +75,7 @@ class Task extends Model
             $task->hitungTahap();
         });
 
-        static::updating(function ($task) {
-            $task->total_hari_kerja = $task->getTotalHariKerja();
+        static::updating(function ($task) {        
             $task->hitungDurasiDanLamaPekerjaan();
             $task->hitungTargetPerHariArsip();
             $task->hitungTargetPerMingguArsip();
@@ -92,7 +90,7 @@ class Task extends Model
             if ($task->marketing_id) {
                 $marketing = Marketing::find($task->marketing_id);
                 if ($marketing) {
-                    $marketing->status = 'On Hold'; // Ubah status
+                    $marketing->status = 'Pengerjaan'; // Ubah status
                     $marketing->save(); // Simpan perubahan
                 }
             }
@@ -102,12 +100,12 @@ class Task extends Model
             $task->total_hari_kerja = $task->getTotalHariKerja();
             $jenisTasks = JenisTask::all(); // Assuming you have a model for JenisTask
             $hariKerjaPerMinggu = $task->getTotalHariKerjaPerMinggu(); // Asumsikan metode ini berada di model Task
-        
+            
             for ($i = 1; $i <= $durasiProyek; $i++) {
             $taskWeek = new TaskWeekOverview();
             $taskWeek->task_id = $task->id;
             $taskWeek->nama_week = "Week " . $i;
-            $taskWeek->total_volume = $task->target_perminggu; // dari model Task
+            $taskWeek->total_volume = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] * $task->target_perday; // dari model Task
             $taskWeek->volume_dikerjakan = 0;
             $taskWeek->target_minggu = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] * $task->target_perday;
             $taskWeek->total_step1 = 0;
@@ -179,7 +177,7 @@ public function hitungStatus()
 ) {
         $this->status = 'Completed';
     } elseif ($this->volume_arsip > 0) {
-        $persentase = ($this->volume_dikerjakan / $this->volume_arsip) * 100;
+        $persentase = ($this->volume_dikerjakan  / ($this->volume_arsip * 3)) * 100;
 
         if ($persentase >= 50) {
             $this->status = 'Behind Schedule';
@@ -212,20 +210,27 @@ public function hitungTahap()
 public function hitungResiko()
 {
     $jumlahOnTrack = \App\Models\TaskWeekOverview::where('task_id', $this->id)
-    ->where('status', 'On Track')
-    ->count();
-    // ✅ Hitung total jumlah detail harian dalam weekOverview ini
-    $totalDetails = \App\Models\TaskWeekOverview::where('task_id', $this->id)->count();
-    // ✅ Update resiko_keterlambatan berdasarkan jumlah On Track
-    if ($jumlahOnTrack === $totalDetails && $totalDetails > 0) {
+        ->where('status', 'On Track')
+        ->count();
+
+    $totalDetails = \App\Models\TaskWeekOverview::where('task_id', $this->id)
+        ->count();
+
+    // Handle kasus ketika tidak ada data
+    if ($totalDetails === 0) {
         $this->resiko_keterlambatan = 'Low';
-    } elseif ($jumlahOnTrack <= 1) {
-        $this->resiko_keterlambatan = 'High';
-    } elseif ($jumlahOnTrack <= 3) {
+        return;
+    }
+    $persentaseOnTrack = ($jumlahOnTrack / $totalDetails) * 100;
+
+    // Tentukan resiko berdasarkan persentase
+    if ($persentaseOnTrack >= 80) {
+        $this->resiko_keterlambatan = 'Low';
+    } elseif ($persentaseOnTrack >= 50) {
         $this->resiko_keterlambatan = 'Medium';
     } else {
-        $this->resiko_keterlambatan = 'Medium'; // fallback default
-    }    
+        $this->resiko_keterlambatan = 'High';
+    }
 }
 
 public function hitungTotalStep()
@@ -299,41 +304,39 @@ public function getTotalHariKerjaPerMinggu(): array
 {
     $start = Carbon::parse($this->tgl_mulai);
     $end = Carbon::parse($this->tgl_selesai);
-    $periode = CarbonPeriod::create($start, $end);
+    
+    // Hitung total minggu dalam proyek (pembulatan ke atas)
+    $totalMinggu = ceil($start->diffInDays($end) / 7);
+    
+    // Inisialisasi array dengan nilai default 0 untuk semua minggu
+    $hasil = array_fill(1, $totalMinggu, 0);
 
-    // Ambil semua tahun yang dicakup dalam periode
+    $periode = CarbonPeriod::create($start, $end);
+    
+    // Ambil tanggal libur (sama seperti sebelumnya)
     $years = range($start->year, $end->year);
     $tanggalMerah = [];
-
-    // Ambil semua tanggal merah (termasuk cuti)
+    
     foreach ($years as $year) {
         $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
-
         if ($response->successful()) {
-            $data = $response->json();
-
-            foreach ($data as $item) {
+            foreach ($response->json() as $item) {
                 $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
             }
         }
     }
 
-    $hasil = [];
+    // Hitung hari kerja per minggu
     foreach ($periode as $tanggal) {
-        // Hitung hanya jika bukan Minggu dan bukan tanggal merah
-        if (
-            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
-            !in_array($tanggal->toDateString(), $tanggalMerah)
-        ) {
-            // Hitung minggu ke-n dari tgl_mulai
-            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
-
-            $key = 'HariKerjaMingguKe' . $mingguKe;
-            if (!isset($hasil[$key])) {
-                $hasil[$key] = 0;
+        if ($tanggal->dayOfWeek !== Carbon::SUNDAY && 
+            !in_array($tanggal->toDateString(), $tanggalMerah)) {
+            
+            $mingguKe = $start->diffInWeeks($tanggal) + 1;
+            
+            // Pastikan mingguKe tidak melebihi totalMinggu
+            if ($mingguKe <= $totalMinggu) {
+                $hasil[$mingguKe]++;
             }
-
-            $hasil[$key]++;
         }
     }
 

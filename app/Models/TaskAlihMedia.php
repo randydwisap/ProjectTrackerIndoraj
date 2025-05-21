@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Http;
 
 class TaskAlihMedia extends Model
 {
@@ -38,6 +40,7 @@ class TaskAlihMedia extends Model
         'target_perday',        
         'telepon',        
         'marketing_id',
+        'total_hari_kerja',
     ];
 
     public function Telepon()
@@ -59,6 +62,7 @@ class TaskAlihMedia extends Model
         parent::boot();
 
         static::saving(function ($taskAlihMedia) {
+            
             $taskAlihMedia->hitungDurasiDanLamaPekerjaan();
             $taskAlihMedia->hitungStatus();
             $taskAlihMedia->hitungResiko();  
@@ -67,6 +71,7 @@ class TaskAlihMedia extends Model
         });
 
         static::updating(function ($taskAlihMedia) {
+            
             $taskAlihMedia->hitungDurasiDanLamaPekerjaan();
             $taskAlihMedia->hitungStatus();
             $taskAlihMedia->hitungResiko(); 
@@ -79,25 +84,32 @@ class TaskAlihMedia extends Model
             if ($taskAlihMedia->marketing_id) {
                 $marketing = Marketing::find($taskAlihMedia->marketing_id);
                 if ($marketing) {
-                    $marketing->status = 'On Hold'; // Ubah status
+                    $marketing->status = 'Pengerjaan'; // Ubah status
                     $marketing->save(); // Simpan perubahan
                 }
             }
 
             $durasiProyek = $taskAlihMedia->durasi_proyek;
-            $jenisTaskAlihhMedia = JenisTaskAlihMedia::all(); // Assuming you have a model for JenisTask
+            $jenisTaskAlihhMedia = JenisTaskAlihMedia::all(); // Assuming you have a model for JenisTask            
+            $totalHariKerja = $taskAlihMedia->total_hari_kerja;
+            $taskAlihMedia->total_hari_kerja = $taskAlihMedia->getTotalHariKerja();
+            $hariKerjaPerMinggu = $taskAlihMedia->getTotalHariKerjaPerMinggu(); // Asumsikan metode ini berada di model Task
         
-            for ($i = 1; $i <= $durasiProyek; $i++) {               
-                    $taskWeekAlihMedia = new TaskWeekAlihMedia();
-                    $taskWeekAlihMedia->task_alih_media_id = $taskAlihMedia->id;
-                    $taskWeekAlihMedia->nama_week = "Week " . $i;
-                    $taskWeekAlihMedia->total_volume = $taskAlihMedia->target_perminggu; // Set total_volume from target_perminggu
-                    $taskWeekAlihMedia->volume_dikerjakan = 0; // Set default or calculate as needed
-                    $taskWeekAlihMedia->total_step1 = 0;
-                    $taskWeekAlihMedia->total_step2 = 0;
-                    $taskWeekAlihMedia->total_step3 = 0;
-                    $taskWeekAlihMedia->total_step4 = 0;
-                    $taskWeekAlihMedia->save();                
+            for ($i = 1; $i <= $durasiProyek; $i++) {
+            $taskWeek = new taskWeekAlihMedia();
+            $taskWeek->task_alih_media_id = $taskAlihMedia->id;
+            $taskWeek->nama_week = "Week " . $i;
+            $taskWeek->total_volume = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] * $taskAlihMedia->target_perday; // dari model Task
+            $taskWeek->volume_dikerjakan = 0;
+            $taskWeek->total_step1 = 0;
+            $taskWeek->total_step2 = 0;
+            $taskWeek->total_step3 = 0;
+            $taskWeek->total_step4 = 0;
+
+            // Ambil hari kerja untuk minggu ke-i, default ke 0 jika tidak ada
+            $taskWeek->hari_kerja = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] ?? 0;
+
+            $taskWeek->save();             
             }
         });
     }
@@ -132,7 +144,7 @@ class TaskAlihMedia extends Model
     ) {
             $this->status = 'Completed';
         } elseif ($this->volume_arsip > 0) {
-            $persentase = ($this->volume_dikerjakan / $this->volume_arsip) * 100;
+            $persentase = ($this->volume_dikerjakan / $this->volume_arsip * 3) * 100;
     
             if ($persentase >= 50) {
                 $this->status = 'Behind Schedule';
@@ -163,20 +175,27 @@ class TaskAlihMedia extends Model
     public function hitungResiko()
 {
     $jumlahOnTrack = \App\Models\TaskWeekAlihMedia::where('task_alih_media_id', $this->id)
-    ->where('status', 'On Track')
-    ->count();
-    // ✅ Hitung total jumlah detail harian dalam weekOverview ini
-    $totalDetails = \App\Models\TaskWeekAlihMedia::where('task_alih_media_id', $this->id)->count();
-    // ✅ Update resiko_keterlambatan berdasarkan jumlah On Track
-    if ($jumlahOnTrack === $totalDetails && $totalDetails > 0) {
+        ->where('status', 'On Track')
+        ->count();
+
+    $totalDetails = \App\Models\TaskWeekAlihMedia::where('task_alih_media_id', $this->id)
+        ->count();
+
+    // Handle kasus ketika tidak ada data
+    if ($totalDetails === 0) {
         $this->resiko_keterlambatan = 'Low';
-    } elseif ($jumlahOnTrack <= 1) {
-        $this->resiko_keterlambatan = 'High';
-    } elseif ($jumlahOnTrack <= 3) {
+        return;
+    }
+    $persentaseOnTrack = ($jumlahOnTrack / $totalDetails) * 100;
+
+    // Tentukan resiko berdasarkan persentase
+    if ($persentaseOnTrack >= 80) {
+        $this->resiko_keterlambatan = 'Low';
+    } elseif ($persentaseOnTrack >= 50) {
         $this->resiko_keterlambatan = 'Medium';
     } else {
-        $this->resiko_keterlambatan = 'Medium'; // fallback default
-    }    
+        $this->resiko_keterlambatan = 'High';
+    }
 }
 
 public function hitungTotalStep()
@@ -207,5 +226,87 @@ return $this->belongsTo(TaskAlihMedia::class);
 public function marketing()
 {
 return $this->belongsTo(Marketing::class);
+}
+
+public function getTotalHariKerja()
+{
+    $start = Carbon::parse($this->tgl_mulai);
+    $end = Carbon::parse($this->tgl_selesai);
+    $periode = CarbonPeriod::create($start, $end);
+
+    // Ambil semua tahun di rentang tgl_mulai - tgl_selesai
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal libur dari API (baik is_cuti true maupun false)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString(); // Normalisasi format
+            }
+        }
+    }
+
+    $hariKerja = 0;
+
+    foreach ($periode as $tanggal) {
+        // Hitung jika bukan Minggu DAN bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            $hariKerja++;
+        }
+    }
+
+    return $hariKerja;
+}
+public function getTotalHariKerjaPerMinggu(): array
+{
+    $start = Carbon::parse($this->tgl_mulai);
+    $end = Carbon::parse($this->tgl_selesai);
+    $periode = CarbonPeriod::create($start, $end);
+
+    // Ambil semua tahun yang dicakup dalam periode
+    $years = range($start->year, $end->year);
+    $tanggalMerah = [];
+
+    // Ambil semua tanggal merah (termasuk cuti)
+    foreach ($years as $year) {
+        $response = Http::get("https://dayoffapi.vercel.app/api?year={$year}");
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $tanggalMerah[] = Carbon::parse($item['tanggal'])->toDateString();
+            }
+        }
+    }
+
+    $hasil = [];
+    foreach ($periode as $tanggal) {
+        // Hitung hanya jika bukan Minggu dan bukan tanggal merah
+        if (
+            $tanggal->dayOfWeek !== Carbon::SUNDAY &&
+            !in_array($tanggal->toDateString(), $tanggalMerah)
+        ) {
+            // Hitung minggu ke-n dari tgl_mulai
+            $mingguKe = intval($start->diffInWeeks($tanggal)) + 1;
+
+            $key = 'HariKerjaMingguKe' . $mingguKe;
+            if (!isset($hasil[$key])) {
+                $hasil[$key] = 0;
+            }
+
+            $hasil[$key]++;
+        }
+    }
+
+    return $hasil;
 }
 }

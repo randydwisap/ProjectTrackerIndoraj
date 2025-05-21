@@ -51,6 +51,8 @@ class TaskWeekOverviewResource extends Resource
                     ->required(),
                     Forms\Components\Select::make('status')
                     ->label('Status')
+                    ->disabled()
+                    ->dehydrated()
                     ->options([
                         'On Track' => 'On Track',
                         'Behind Schedule' => 'Behind Schedule',
@@ -60,6 +62,8 @@ class TaskWeekOverviewResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('resiko_keterlambatan')
                     ->label('Resiko Keterlambatan')
+                    ->disabled()
+                    ->dehydrated()
                     ->options([
                         'Low' => 'Low',
                         'Medium' => 'Medium',

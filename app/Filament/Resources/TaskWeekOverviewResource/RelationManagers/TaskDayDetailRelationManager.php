@@ -36,38 +36,54 @@ class TaskDayDetailRelationManager extends RelationManager
                 ->required(),
 
             // Volume Dikerjakan
-            Forms\Components\TextInput::make('output')
+           Forms\Components\TextInput::make('output')
                 ->label('Volume Dikerjakan')
                 ->numeric()
+                ->inputMode('decimal')
                 ->required()
                 ->reactive()
                 ->afterStateUpdated(function ($set, $get) {
                     $output = (float) ($get('output') ?: 0);
+                    $jenisTaskId = $get('jenis_task_id');
+                    
+                    // Jika jenis task bukan 1, maka hasil = output
+                    if ($jenisTaskId != 1) {
+                        $set('hasil', $output);
+                    }
+                    
+                    // Hitung hasil_inarsip = output - hasil
                     $hasil = (float) ($get('hasil') ?: 0);
                     $set('hasil_inarsip', $output - $hasil);
-
+            
+                    // Update status berdasarkan target_perday
                     $taskId = $get('task_id');
-                    $task = Task::find($taskId);
+                    $task = \App\Models\Task::find($taskId);
                     $targetPerDay = (float) ($task?->target_perday ?? 0);
-
+            
                     if ($targetPerDay > 0) {
                         $percent = ($output / $targetPerDay) * 100;
-                        $status = match (true) {
-                            $percent >= 100 => 'On Track',
-                            $percent > 50 => 'Behind Schedule',
-                            default => 'Far Behind Schedule',
-                        };
+            
+                        if ($percent >= 100) {
+                            $status = 'On Track';
+                        } elseif ($percent > 50) {
+                            $status = 'Behind Schedule';
+                        } else {
+                            $status = 'Far Behind Schedule';
+                        }
+            
                         $set('status', $status);
                     } else {
                         $set('status', 'On Track');
                     }
-                }),
+                }),        
 
             // Arsip
             Forms\Components\TextInput::make('hasil')
                 ->label('Hasil Arsip')
                 ->numeric()
+                ->inputMode('decimal')
                 ->reactive()
+                ->readonly(fn ($get) => $get('jenis_task_id') != 1) // Nonaktifkan field jika jenis task bukan 1
                 ->afterStateUpdated(fn ($set, $get) =>
                     $set('hasil_inarsip', (float) ($get('output') ?: 0) - (float) ($get('hasil') ?: 0))
                 ),

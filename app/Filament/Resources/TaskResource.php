@@ -79,8 +79,6 @@ class TaskResource extends Resource
                         $set('volume_arsip', $marketing->total_volume);                       
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Pemilahan dan Identifikasi');
-
-                        // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
                         self::updateTargetPerminggu($set, $get);
                     }
@@ -99,6 +97,7 @@ class TaskResource extends Resource
             Forms\Components\Select::make('tahap_pengerjaan')
                 ->label('Tahap Pengerjaan')
                 ->required()
+                ->hidden()
                 ->options(\App\Models\JenisTask::pluck('nama_task', 'nama_task'))
                 ->default('Pemilahan & Identifikasi')
                 ->dehydrated(true), // Pastikan nilai ini ikut dikirim saat submit
@@ -106,6 +105,7 @@ class TaskResource extends Resource
             Forms\Components\Select::make('status')
                 ->label('Status')
                 ->disabled()
+                ->hidden()                
                 ->default('Behind Schedule')
                 ->options([
                     'On Track' => 'On Track',
@@ -118,6 +118,7 @@ class TaskResource extends Resource
             Forms\Components\Select::make('resiko_keterlambatan')
                 ->label('Resiko Keterlambatan')
                 ->disabled()
+                ->hidden()
                 ->options([
                     'Low' => 'Low',
                     'Medium' => 'Medium',
@@ -126,30 +127,48 @@ class TaskResource extends Resource
                 ])
                 ->default('Low'),
 
-            Forms\Components\DatePicker::make('tgl_mulai')
+                Forms\Components\TextInput::make('volume_arsip')
+                    ->label('Volume Arsip (mL)')
+                    ->prefix('mL ')
+                    ->numeric()
+                    ->inputMode('decimal')
+                    ->required(),
+                
+                Forms\Components\DatePicker::make('tgl_mulai')
                 ->label('Tanggal Mulai')
                 ->required()
+                ->live()
                 ->default(now())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     self::updateDurasiDanLamaPekerjaan($set, $get);
                     self::updateTargetPerminggu($set, $get);
                 }),
-
-            Forms\Components\DatePicker::make('tgl_selesai')
+                
+                Forms\Components\DatePicker::make('tgl_selesai')
                 ->label('Tanggal Selesai')
                 ->required()
-                ->default(now())
+                ->live()
+                ->default(now()->addMonth())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     self::updateDurasiDanLamaPekerjaan($set, $get);
                     self::updateTargetPerminggu($set, $get);
                 }),
+                
+                Forms\Components\Select::make('jenis_arsip')
+                ->label('Jenis Arsip')
+                ->options([
+                    'Aktif' => 'Aktif',
+                    'Inaktif' => 'Inaktif',
+                    'Campuran' => 'Campuran',
+                ])
+                ->required(),
 
-            Forms\Components\TextInput::make('durasi_proyek')
-                ->label('Durasi Proyek (Minggu)')
+            Forms\Components\TextInput::make('lama_pekerjaan')
+                ->label('Lama Pekerjaan (Hari)')
                 ->numeric()
                 ->disabled()
-                ->default(fn ($get) => static::calculateDuration($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateDuration($get))
+                ->default(fn ($get) => static::calculateLamaPekerjaan($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
                 ->required(),
 
             Forms\Components\Hidden::make('nilai_proyek'),
@@ -162,12 +181,13 @@ class TaskResource extends Resource
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTotalHariKerja($get))
                 ->required(),
 
-            Forms\Components\TextInput::make('lama_pekerjaan')
-                ->label('Lama Pekerjaan (Hari)')
+
+            Forms\Components\TextInput::make('durasi_proyek')
+                ->label('Durasi Proyek (Minggu)')
                 ->numeric()
                 ->disabled()
-                ->default(fn ($get) => static::calculateLamaPekerjaan($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
+                ->default(fn ($get) => static::calculateDuration($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateDuration($get))
                 ->required(),
 
             Forms\Components\Select::make('project_manager')
@@ -185,23 +205,55 @@ class TaskResource extends Resource
                         ->disabled()
                         ->dehydrated()
                         ->required(),
-                    
+                        
+                        Forms\Components\TextInput::make('target_perminggu')
+                            ->label('Target Perminggu (mL)')
+                            ->numeric()
+                            ->inputMode('decimal')
+                            ->disabled()
+                            ->default(fn ($get) => static::calculateTargetPerminggu($get))
+                            ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
+                            ->dehydrated()
+                            ->required(),
+            
+                        Forms\Components\TextInput::make('target_perday')
+                            ->label('Target Perhari (mL)')
+                            ->numeric()
+                            ->inputMode('decimal')
+                            ->disabled()
+                            ->default(fn ($get) => static::calculateTargetPerDay($get))
+                            ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
+                            ->dehydrated()
+                            ->required(),
 
             Forms\Components\TextInput::make('link_rab')
                 ->label('Link RAB')
                 ->url()
                 ->nullable(),
 
-            Forms\Components\TextInput::make('lokasi')
-                ->label('Lokasi')
-                ->required(),
+            Forms\Components\Select::make('lokasi')
+                    ->label('Pilih Kota')
+                    ->searchable()
+                    ->getSearchResultsUsing(function (string $search) {
+                        $url = "https://alamat.thecloudalert.com/api/kabkota/get/";
+                        $response = Http::get($url);
+                
+                        if ($response->successful()) {
+                            $data = collect($response->json()['result']);
+                
+                            // Filter berdasarkan pencarian
+                            if ($search) {
+                                $data = $data->filter(fn($item) => stripos($item['text'], $search) !== false);
+                            }
+                
+                            // Return dalam format key-value (id => nama)
+                            return $data->mapWithKeys(fn($item) => [$item['text'] => $item['text']])->toArray();
+                        }
+                
+                        return [];
+                    })
+                    ->required(),
 
-            Forms\Components\TextInput::make('volume_arsip')
-                ->label('Volume Arsip (mL)')
-                ->prefix('mL ')
-                ->numeric()
-                ->inputMode('decimal')
-                ->required(),
             Forms\Components\TextInput::make('hasil_pemilahan')
                 ->label('Volume Arsip Pemilahan(mL)')
                 ->prefix('mL ')
@@ -210,34 +262,6 @@ class TaskResource extends Resource
                 ->inputMode('decimal')
                 ->required(),
 
-            Forms\Components\Select::make('jenis_arsip')
-                ->label('Jenis Arsip')
-                ->options([
-                    'Aktif' => 'Aktif',
-                    'Inaktif' => 'Inaktif',
-                    'Campuran' => 'Campuran',
-                ])
-                ->required(),
-
-            Forms\Components\TextInput::make('target_perminggu')
-                ->label('Target Perminggu (mL)')
-                ->numeric()
-                ->inputMode('decimal')
-                ->disabled()
-                ->default(fn ($get) => static::calculateTargetPerminggu($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
-                ->dehydrated()
-                ->required(),
-
-            Forms\Components\TextInput::make('target_perday')
-                ->label('Target Perhari (mL)')
-                ->numeric()
-                ->inputMode('decimal')
-                ->disabled()
-                ->default(fn ($get) => static::calculateTargetPerDay($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
-                ->dehydrated()
-                ->required(),
 
             Forms\Components\Textarea::make('deskripsi_pekerjaan')
                 ->label('Deskripsi Pekerjaan')
@@ -596,7 +620,7 @@ class TaskResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }
@@ -616,7 +640,7 @@ class TaskResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }

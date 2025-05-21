@@ -58,6 +58,10 @@ class Marketing extends Model
         'note',
         'manajer_operasional',
         'manajer_keuangan',
+        'ppn',
+        'pph',
+        'pencairan',
+        'dasar_pengenaan_pajak',
     ];
 
     

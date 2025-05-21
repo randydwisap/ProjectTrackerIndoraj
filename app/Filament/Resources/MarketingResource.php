@@ -246,8 +246,48 @@ class MarketingResource extends Resource
                     ->hidden()
                     ->date()
                     ->sortable(),
+              Tables\Columns\TextColumn::make('nilai_proyek')
+                    ->label('Nilai Awal Proyek')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),                    
                 Tables\Columns\TextColumn::make('nilai_akhir_proyek')
                     ->label('Nilai Akhir Proyek')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('dasar_pengenaan_pajak')
+                    ->label('DPP')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('ppn')
+                    ->label('PPN')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('pph')
+                    ->label('PPH')
+                    ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
+                    ->money(
+                        currency: 'IDR',
+                        locale: 'id', // Format Indonesia
+                    )
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('pencairan')
+                    ->label('Pencairan')
                     ->hidden(fn () => !auth()->user()?->hasAnyRole(['Manajer Keuangan', 'Manajer Operasional']))
                     ->money(
                         currency: 'IDR',
@@ -301,18 +341,94 @@ class MarketingResource extends Resource
             (auth()->user()?->hasRole('Manajer Keuangan') && $record->manajer_keuangan == 0)
         )
     )
-    ->form(fn () => auth()->user()?->hasRole('Manajer Keuangan') ? [
-                Forms\Components\TextInput::make('nilai_akhir_proyek')->label('Nilai Akhir Proyek')->numeric()->prefix('Rp ')->required()->default(fn ($record) => $record?->nilai_proyek),
-                Forms\Components\TextInput::make('terms_of_payment')->label('Terms of Payment')->numeric()->prefix('Day ')->required()->default(60),
-                Forms\Components\Select::make('status_pembayaran')
-                        ->options([
-                            'Belum Lunas' => 'Belum Lunas',
-                            'Lunas' => 'Lunas',
-                        ])
-                        ->required()
-                        ->label('Status Pembayaran')
-                        ->default('Belum Lunas'),
-    ] : [])
+->form(fn () => auth()->user()?->hasRole('Manajer Keuangan') ? [
+        Forms\Components\TextInput::make('nilai_akhir_proyek')
+    ->label('Nilai Kontrak (Termasuk PPN)')
+    ->numeric()
+    ->prefix('Rp ')
+    ->required()
+    ->default(fn ($record) => $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0)
+    ->live()
+    ->afterStateUpdated(function ($state, $set, $get) {
+        $settings = \App\Models\Setting::first();
+        $ppnPercentage = $settings->ppn ?? 11;
+        
+        $nilaiTermasukPPN = (float) str_replace(',', '', $state);
+        $dasarPengenaanPajak = round(($nilaiTermasukPPN * 100) / (100 + $ppnPercentage), 2);
+        $ppn = round($dasarPengenaanPajak * ($ppnPercentage / 100), 2);
+        $pphPercentage = $settings->pph ?? 2;
+        $pph = round($dasarPengenaanPajak * ($pphPercentage / 100), 2);
+        $pencairan = round($dasarPengenaanPajak - $pph, 2);
+        
+        $set('dasar_pengenaan_pajak', $dasarPengenaanPajak);
+        $set('ppn', $ppn);
+        $set('pph', $pph);
+        $set('pencairan', $pencairan);
+    }),
+
+    Forms\Components\TextInput::make('dasar_pengenaan_pajak')
+        ->label('Dasar Pengenaan Pajak (DPP)')
+        ->numeric()
+        ->prefix('Rp ')
+        ->default(function ($record) {
+            $settings = \App\Models\Setting::first();
+            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+            return number_format(($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100, 2, '.', '');
+        }),
+
+    Forms\Components\TextInput::make('ppn')
+        ->label('PPN')
+        ->numeric()
+        ->prefix('Rp ')
+        ->required()
+        ->default(function ($record) {
+            $settings = \App\Models\Setting::first();
+            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+            $dpp = ($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100;
+            return number_format($dpp * (($settings->ppn ?? 11) / 100), 2, '.', '');
+        }),
+
+    Forms\Components\TextInput::make('pph')
+        ->label('PPH')
+        ->numeric()
+        ->prefix('Rp ')
+        ->required()
+        ->default(function ($record) {
+            $settings = \App\Models\Setting::first();
+            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+            $dpp = ($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100;
+            return number_format($dpp * (($settings->pph ?? 2) / 100), 2, '.', '');
+        }),
+
+    Forms\Components\TextInput::make('pencairan')
+        ->label('Nilai Pencairan (DPP - PPH)')
+        ->numeric()
+        ->prefix('Rp ')
+        ->required()
+        ->default(function ($record) {
+            $settings = \App\Models\Setting::first();
+            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+            $dpp = ($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100;
+            $pph = $dpp * (($settings->pph ?? 2) / 100);
+            return number_format($dpp - $pph, 2, '.', '');
+        }),
+    
+    Forms\Components\TextInput::make('terms_of_payment')
+        ->label('Terms of Payment')
+        ->numeric()
+        ->prefix('Day ')
+        ->required()
+        ->default(60),
+    
+    Forms\Components\Select::make('status_pembayaran')
+        ->options([
+            'Belum Lunas' => 'Belum Lunas',
+            'Lunas' => 'Lunas',
+        ])
+        ->required()
+        ->label('Status Pembayaran')
+        ->default('Belum Lunas'),
+] : [])
     ->action(function ($record, array $data) {
         $user = auth()->user();
 
@@ -325,6 +441,10 @@ class MarketingResource extends Resource
                 $record->update([
                     'manajer_keuangan' => 1,
                     'nilai_akhir_proyek' => $data['nilai_akhir_proyek'] ?? null,
+                    'ppn' => $data['ppn'] ?? null,
+                    'pph' => $data['pph'] ?? null,
+                    'dasar_pengenaan_pajak' => $data['dasar_pengenaan_pajak'] ?? null,
+                    'pencairan' => $data['pencairan'] ?? null,
                     'terms_of_payment' => $data['terms_of_payment'] ?? null,
                     'status_pembayaran' => $data['status_pembayaran'] ?? null,
                 ]);

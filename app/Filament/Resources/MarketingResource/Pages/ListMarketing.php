@@ -32,13 +32,24 @@ class ListMarketing extends ListRecords
                         ->default(fn () => Setting::first()->ppn ?? 11.00)
                         ->minValue(0)
                         ->maxValue(100)
+                        ->suffix('%'),
+                    TextInput::make('pph')
+                        ->label('PPH (%)')
+                        ->numeric()
+                        ->required()
+                        ->default(fn () => Setting::first()->pph ?? 2.00)
+                        ->minValue(0)
+                        ->maxValue(100)
                         ->suffix('%')
                 ])
                 ->action(function (array $data) {
-                    Setting::updateOrCreate(
-                        ['id' => 1],
-                        ['ppn' => $data['ppn']]
-                    );
+                        Setting::updateOrCreate(
+                    ['id' => 1],
+                    [
+                        'ppn' => $data['ppn'],
+                        'pph' => $data['pph']
+                    ]
+                );
                     
                     Notification::make()
                         ->title('Settings saved successfully')
