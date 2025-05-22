@@ -13,7 +13,6 @@ class TaskWeekOverviewRelationManager extends RelationManager
     protected static string $relationship = 'taskWeekOverviews';
     protected static ?string $title = 'Rekap Mingguan'; // Judul header
     protected static ?string $navigationLabel = 'Rekap Mingguan';
-
     public function table(Table $table): Table
     {
         return $table
@@ -24,6 +23,24 @@ class TaskWeekOverviewRelationManager extends RelationManager
                 ->searchable(),
                 Tables\Columns\TextColumn::make('nama_week') // Display nama_task from jenis_task
                 ->label('Week')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('hari_kerja') // Display nama_task from jenis_task
+                ->label('Hari Kerja')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('jumlah_tanggal_unik')
+                ->label('Hari Input')
+                ->sortable()
+                ->numeric()
+                ->getStateUsing(fn ($record) => $record->jumlah_tanggal_unik),
+                Tables\Columns\TextColumn::make('target_minggu') // Display nama_task from jenis_task
+                ->label('Target')
+                ->numeric(
+                            decimalPlaces: 1, // Menampilkan 3 digit desimal
+                            decimalSeparator: '.',
+                            thousandsSeparator: ','
+                        )
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('volume_dikerjakan') // Display nama_task from jenis_task
@@ -119,4 +136,5 @@ class TaskWeekOverviewRelationManager extends RelationManager
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
+
 }

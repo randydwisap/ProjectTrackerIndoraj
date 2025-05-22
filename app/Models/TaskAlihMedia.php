@@ -173,7 +173,8 @@ class TaskAlihMedia extends Model
     ) {
             $this->status = 'Completed';
         } elseif ($this->volume_arsip > 0) {
-            $persentase = ($this->volume_dikerjakan / $this->volume_arsip * 4) * 100;
+            $jumlahTahap = \App\Models\JenisTaskAlihMedia::count();
+            $persentase = ($this->volume_dikerjakan / $this->volume_arsip * $jumlahTahap) * 100;
     
             if ($persentase >= 50) {
                 $this->status = 'Behind Schedule';

@@ -35,6 +35,14 @@ public function taskDayDetails()
 {
     return $this->belongsTo(Task::class);
 }
+
+public function getJumlahTanggalUnikAttribute()
+{
+    return \App\Models\TaskDayDetail::where('task_week_overview_id', $this->id)
+        ->distinct()
+        ->count('tanggal');
+}
+
 protected static function booted()
 {
     static::saving(function ($weekOverview) {

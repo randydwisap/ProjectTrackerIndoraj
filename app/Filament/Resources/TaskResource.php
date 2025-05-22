@@ -609,6 +609,7 @@ public static function calculateDuration($get)
 
     public static function calculateTargetPerminggu($get)
     {
+        $jumlahTahap = \App\Models\JenisTask::count();
         $volumeArsip = (float) $get('volume_arsip');
         $durasiProyek = (int) $get('durasi_proyek');
 
@@ -616,11 +617,12 @@ public static function calculateDuration($get)
             return 0;
         }
 
-        return $volumeArsip * 4 / $durasiProyek;
+        return $volumeArsip *  $jumlahTahap / $durasiProyek;
     }
 
     public static function calculateTargetPerDay($get)
     {
+        $jumlahTahap = \App\Models\JenisTask::count();
         $volumeArsip = (float) $get('volume_arsip');
         $total_hari_kerja = (int) $get('total_hari_kerja');
 
@@ -628,7 +630,7 @@ public static function calculateDuration($get)
             return 0;
         }
 
-        return $volumeArsip*4 / $total_hari_kerja;
+        return $volumeArsip*$jumlahTahap / $total_hari_kerja;
     }
 
     /**

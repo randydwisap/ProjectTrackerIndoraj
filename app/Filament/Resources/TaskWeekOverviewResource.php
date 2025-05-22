@@ -85,6 +85,15 @@ class TaskWeekOverviewResource extends Resource
                 ->label('Week')
                 ->sortable()
                 ->searchable(),
+                Tables\Columns\TextColumn::make('jumlah_tanggal_unik')
+                ->label('Hari Input')
+                ->sortable()
+                ->numeric()
+                ->getStateUsing(fn ($record) => $record->jumlah_tanggal_unik),
+                Tables\Columns\TextColumn::make('hari_kerja') // Display nama_task from jenis_task
+                ->label('Hari Kerja')
+                ->sortable()
+                ->searchable(),
                Tables\Columns\TextColumn::make('target_minggu') // Display nama_task from jenis_task
                 ->label('Target')
                 ->numeric(

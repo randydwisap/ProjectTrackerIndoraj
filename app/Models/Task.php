@@ -175,12 +175,13 @@ public function hitungDurasiDanLamaPekerjaan()
 
     public function hitungTargetPerHariArsip()
 {
+    $jumlahTahap234 = \App\Models\JenisTask::where('id', '!=', 1)->count();
     if ($this->total_hari_kerja > 0) {
         $totalArsip = \App\Models\TaskDayDetail::where('task_id', $this->id)
                         ->where('jenis_task_id', 1)
                         ->sum('hasil');
 
-        $this->target_perday_arsip = $totalArsip*3 / $this->total_hari_kerja;
+        $this->target_perday_arsip = $totalArsip*$jumlahTahap234 / $this->total_hari_kerja;
     } else {
         $this->target_perday_arsip = 0;
     }
