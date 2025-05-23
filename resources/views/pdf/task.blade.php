@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>SPT - {{ $task->pekerjaan }} | {{ $task->klien }}</title>
     <style>
         @page {
             margin: 0;
