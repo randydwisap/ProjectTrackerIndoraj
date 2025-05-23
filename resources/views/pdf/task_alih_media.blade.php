@@ -14,6 +14,7 @@
             margin: 0;
             padding: 100px 50px 50px 50px;
             background-image: url("{{ public_path('storage/kop.jpg') }}");
+            /* background-image: url('{{ storage_path("app/public/kop.jpg") }}'); untuk deploy */
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
