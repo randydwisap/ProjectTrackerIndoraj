@@ -542,10 +542,14 @@ Forms\Components\Textarea::make('marketing_note_operasional')
             ->actions([
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]);
+                Tables\Actions\Action::make('Print')
+                ->url(fn ($record) => url('/task/' . $record->id . '/print'))
+                ->icon('heroicon-o-printer')
+                ->openUrlInNewTab(),
+                    ])
+                    ->bulkActions([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ]);
     }
 
 public static function calculateDuration($get)
@@ -625,7 +629,6 @@ public static function calculateDuration($get)
             'edit' => Pages\EditTask::route('/{record}/edit'),
         ];
     }
-
     public static function calculateTargetPerminggu($get)
     {
         $jumlahTahap = \App\Models\JenisTask::count();
