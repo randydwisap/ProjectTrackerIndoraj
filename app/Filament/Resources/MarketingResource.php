@@ -178,6 +178,7 @@ class MarketingResource extends Resource
                         }),
                 Forms\Components\FileUpload::make('lampiran')->required()->acceptedFileTypes(['application/pdf'])->directory('marketing_lampiran'),
                 Forms\Components\Textarea::make('note')->label('Catatan'),
+                Forms\Components\Textarea::make('note_operasional')->label('Catatan Operasional'),
             ]);
     }
 

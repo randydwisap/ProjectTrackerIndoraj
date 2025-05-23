@@ -57,19 +57,27 @@ class TaskResource extends Resource
             Forms\Components\Select::make('marketing_id')
                 ->label('Pekerjaan dari marketing')
                 ->required()
-                ->default(fn ($get, $state) => $state ?? $get('record.marketing_id'))
                 ->preload()
                 ->live()
-                ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
-                ->options(
-                    Marketing::where('status', 'Persiapan Operasional')
+                ->default(fn ($get, $record) => $get('marketing_id') ?? $record?->marketing_id)
+                ->disabled(fn ($get, $record) => $record !== null)
+                ->extraAttributes(['id' => 'marketing_id'])
+                ->options(function ($get, $record) {
+                    $query = Marketing::query()
                         ->where('jenis_pekerjaan', 'Pengolahan Arsip')
-                        ->where('project_manager', auth()->user()->id)
-                        ->pluck('nama_pekerjaan', 'id')
-                )                
+                        ->where(function ($query) use ($record) {
+                            $query->where('status', 'Persiapan Operasional');
+
+                            if ($record && $record->marketing_id) {
+                                $query->orWhere('id', $record->marketing_id);
+                            }
+                        })
+                        ->where('project_manager', auth()->user()->id);
+
+                    return $query->pluck('nama_pekerjaan', 'id');
+                })
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                    $marketing = Marketing::find($state);
-                    $user = User::find($state);
+                    $marketing = \App\Models\Marketing::find($state);
                     if ($marketing) {
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
@@ -78,6 +86,7 @@ class TaskResource extends Resource
                         $set('link_rab', $marketing->link_rab);                    
                         $set('volume_arsip', $marketing->total_volume);                       
                         $set('status', 'Behind Schedule');
+                        $set('marketing_note_operasional', $marketing->note_operasional);
                         $set('tahap_pengerjaan', 'Pemilahan dan Identifikasi');
                         self::updateDurasiDanLamaPekerjaan($set, $get);
                         self::updateTargetPerminggu($set, $get);
@@ -288,7 +297,17 @@ class TaskResource extends Resource
                 ->deletable(true)
                 ->default([])
                 ->required(),
-        ]);
+Forms\Components\Textarea::make('marketing_note_operasional')
+    ->label('Catatan Operasional Marketing')
+    ->rows(5)
+    ->disabled()
+    ->dehydrated(false)
+    ->afterStateHydrated(function (callable $set, $state, $get, $record) {
+        if ($record?->marketing) {
+            $set('marketing_note_operasional', $record->marketing->note_operasional);
+        }
+    }),
+ ]);
     }
 
     public static function table(Table $table): Table

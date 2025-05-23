@@ -83,4 +83,10 @@ protected static function booted()
    
     });
 }
+public function getJumlahTanggalUnikAttribute()
+{
+    return \App\Models\TaskDayAlihMedia::where('task_week_alih_media_id', $this->id)
+        ->distinct()
+        ->count('tanggal');
+}
 }

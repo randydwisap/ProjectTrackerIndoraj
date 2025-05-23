@@ -62,6 +62,7 @@ class Marketing extends Model
         'pph',
         'pencairan',
         'dasar_pengenaan_pajak',
+        'note_operasional',
     ];
 
     

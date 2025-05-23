@@ -52,14 +52,23 @@ class TaskAlihMediaResource extends Resource
                 ->required()
                 ->default(fn ($get, $state) => $state ?? $get('record.marketing_id'))
                 ->preload()
+                ->disabled(fn ($get, $record) => $record !== null)
                 ->live()
                 ->extraAttributes(['id' => 'marketing_id']) // Tambahkan ID untuk JavaScript
-                ->options(
-                    Marketing::where('status', 'Persiapan Operasional')
+                ->options(function ($get, $record) {
+                    $query = Marketing::query()
                         ->where('jenis_pekerjaan', 'Alih Media')
-                        ->where('project_manager', auth()->user()->id)
-                        ->pluck('nama_pekerjaan', 'id')
-                )                
+                        ->where(function ($query) use ($record) {
+                            $query->where('status', 'Persiapan Operasional');
+
+                            if ($record && $record->marketing_id) {
+                                $query->orWhere('id', $record->marketing_id);
+                            }
+                        })
+                        ->where('project_manager', auth()->user()->id);
+
+                    return $query->pluck('nama_pekerjaan', 'id');
+                })       
                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                     $marketing = Marketing::find($state);
                     $user = User::find($state);
@@ -69,7 +78,8 @@ class TaskAlihMediaResource extends Resource
                         $set('lokasi', $marketing->lokasi);              
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);                    
-                        $set('volume_arsip', $marketing->total_volume);                       
+                        $set('volume_arsip', $marketing->total_volume);  
+                        $set('marketing_note_operasional', $marketing->note_operasional);                    
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Scanning');
 
@@ -89,9 +99,37 @@ class TaskAlihMediaResource extends Resource
                 ->required()
                 ->maxLength(255),
 
+            Forms\Components\TextInput::make('volume_arsip')
+                ->label('Volume Arsip (Halaman)')
+                ->prefix('mL ')
+                ->inputMode('decimal')
+                ->numeric()
+                ->required(),
+
+            Forms\Components\DatePicker::make('tgl_mulai')
+                ->label('Tanggal Mulai')
+                ->live()
+                ->required()
+                ->default(now())
+                ->afterStateUpdated(function ($state, callable $set, $get) {
+                    self::updateDurasiDanLamaPekerjaan($set, $get);
+                    self::updateTargetPerminggu($set, $get);
+                }),
+
+            Forms\Components\DatePicker::make('tgl_selesai')
+                ->label('Tanggal Selesai')
+                ->required()
+                ->live()
+                ->default(now())
+                ->afterStateUpdated(function ($state, callable $set, $get) {
+                    self::updateDurasiDanLamaPekerjaan($set, $get);
+                    self::updateTargetPerminggu($set, $get);
+                }),
+
             Forms\Components\Select::make('tahap_pengerjaan')
                 ->label('Tahap Pengerjaan')
                 ->required()
+                ->hidden()
                 ->options(\App\Models\JenisTaskAlihMedia::pluck('nama_task', 'nama_task'))
                 ->default('Scanning')
                 ->dehydrated(true), // Pastikan nilai ini ikut dikirim saat submit
@@ -119,26 +157,6 @@ class TaskAlihMediaResource extends Resource
                 ])
                 ->default('Low'),
 
-            Forms\Components\DatePicker::make('tgl_mulai')
-                ->label('Tanggal Mulai')
-                ->live()
-                ->required()
-                ->default(now())
-                ->afterStateUpdated(function ($state, callable $set, $get) {
-                    self::updateDurasiDanLamaPekerjaan($set, $get);
-                    self::updateTargetPerminggu($set, $get);
-                }),
-
-            Forms\Components\DatePicker::make('tgl_selesai')
-                ->label('Tanggal Selesai')
-                ->required()
-                ->live()
-                ->default(now())
-                ->afterStateUpdated(function ($state, callable $set, $get) {
-                    self::updateDurasiDanLamaPekerjaan($set, $get);
-                    self::updateTargetPerminggu($set, $get);
-                }),
-
             Forms\Components\TextInput::make('durasi_proyek')
                 ->label('Durasi Proyek (Minggu)')
                 ->numeric()
@@ -151,6 +169,7 @@ class TaskAlihMediaResource extends Resource
             Forms\Components\TextInput::make('lama_pekerjaan')
                 ->label('Lama Pekerjaan (Hari)')
                 ->numeric()
+                ->hidden()
                 ->disabled()
                 ->default(fn ($get) => static::calculateLamaPekerjaan($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateLamaPekerjaan($get))
@@ -161,6 +180,26 @@ class TaskAlihMediaResource extends Resource
                 ->disabled()
                 ->default(fn ($get) => static::calculateTotalHariKerja($get))
                 ->dehydrateStateUsing(fn ($state, $get) => static::calculateTotalHariKerja($get))
+                ->required(),
+
+            Forms\Components\TextInput::make('target_perminggu')
+                ->label('Target Perminggu (Halaman)')
+                ->numeric()
+                ->inputMode('decimal')
+                ->disabled()
+                ->default(fn ($get) => static::calculateTargetPerminggu($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
+                ->dehydrated()
+                ->required(),
+
+            Forms\Components\TextInput::make('target_perday')
+                ->label('Target Perhari (Halaman)')
+                ->numeric()
+                ->disabled()
+                ->inputMode('decimal')
+                ->default(fn ($get) => static::calculateTargetPerDay($get))
+                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
+                ->dehydrated()
                 ->required(),
 
             Forms\Components\Select::make('project_manager')
@@ -207,13 +246,6 @@ class TaskAlihMediaResource extends Resource
                     })
                     ->required(),
 
-            Forms\Components\TextInput::make('volume_arsip')
-                ->label('Volume Arsip (Halaman)')
-                ->prefix('mL ')
-                ->inputMode('decimal')
-                ->numeric()
-                ->required(),
-
             Forms\Components\Select::make('jenis_arsip')
                 ->label('Jenis Arsip')
                 ->options([
@@ -222,36 +254,16 @@ class TaskAlihMediaResource extends Resource
                     'Campuran' => 'Campuran',
                 ])
                 ->required(),
-
-            Forms\Components\TextInput::make('target_perminggu')
-                ->label('Target Perminggu (Halaman)')
-                ->numeric()
-                ->inputMode('decimal')
-                ->disabled()
-                ->default(fn ($get) => static::calculateTargetPerminggu($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerminggu($get))
-                ->dehydrated()
-                ->required(),
-
-            Forms\Components\TextInput::make('target_perday')
-                ->label('Target Perhari (Halaman)')
-                ->numeric()
-                ->disabled()
-                ->inputMode('decimal')
-                ->default(fn ($get) => static::calculateTargetPerDay($get))
-                ->dehydrateStateUsing(fn ($state, $get) => static::calculateTargetPerDay($get))
-                ->dehydrated()
-                ->required(),
+                Forms\Components\TextInput::make('jumlah_sdm')
+                    ->label('Jumlah SDM')
+                    ->numeric()
+                    ->required(),
 
             Forms\Components\Textarea::make('deskripsi_pekerjaan')
                 ->label('Deskripsi Pekerjaan')
                 ->rows(3)
                 ->required(),
 
-            Forms\Components\TextInput::make('jumlah_sdm')
-                ->label('Jumlah SDM')
-                ->numeric()
-                ->required(),
 
             Forms\Components\Repeater::make('pelaksana')
                 ->label('Pelaksana')
@@ -268,6 +280,16 @@ class TaskAlihMediaResource extends Resource
                 ->deletable(true)
                 ->default([])
                 ->required(),
+            Forms\Components\Textarea::make('marketing_note_operasional')
+                ->label('Catatan Operasional Marketing')
+                ->rows(5)
+                ->disabled()
+                ->dehydrated(false)
+                ->afterStateHydrated(function (callable $set, $state, $get, $record) {
+                    if ($record?->marketing) {
+                        $set('marketing_note_operasional', $record->marketing->note_operasional);
+                    }
+                }),
         ]);
     }
 
