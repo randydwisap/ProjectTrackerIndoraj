@@ -494,13 +494,16 @@ class TaskAlihMediaResource extends Resource
                 
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('Print')
+                ->url(fn ($record) => url('/task-alih-media/' . $record->id . '/print'))
+                ->icon('heroicon-o-printer')
+                ->openUrlInNewTab(),
+                    ])
+                    ->bulkActions([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ]);
     }
 
     public static function getRelations(): array

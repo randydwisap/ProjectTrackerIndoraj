@@ -7,8 +7,8 @@
         }
 
         .content {
-    margin-top: 75px; /* contoh: tambahkan margin top lebih besar */
-}
+            margin-top: 75px;
+        }
 
         body {
             margin: 0;
@@ -30,7 +30,7 @@
         }
 
         th, td {
-            padding: 2px 6px; /* Lebih rapat */
+            padding: 2px 6px;
             vertical-align: top;
         }
 
@@ -51,24 +51,24 @@
 </head>
 <body>
     <div class="content">
-        <h2>SPT Proyek: {{ $task->pekerjaan }}</h2>
+        <h2>SPT Alih Media: {{ $taskAlihMedia->pekerjaan }}</h2>
 
         <table class="two-column-table">
             <tr>
-                <td><span class="bold">Klien:</span> {{ $task->klien }}</td>
-                <td><span class="bold">Lokasi:</span> {{ $task->lokasi }}</td>
+                <td><span class="bold">Klien:</span> {{ $taskAlihMedia->klien }}</td>
+                <td><span class="bold">Lokasi:</span> {{ $taskAlihMedia->lokasi }}</td>
             </tr>
             <tr>
-                <td><span class="bold">Jenis Arsip:</span> {{ $task->jenis_arsip }}</td>
-                <td><span class="bold">Total Volume:</span> {{ number_format($task->volume_arsip, 2) }} ml</td>
+                <td><span class="bold">Jenis Arsip:</span> {{ $taskAlihMedia->jenis_arsip }}</td>
+                <td><span class="bold">Total Volume:</span> {{ number_format($taskAlihMedia->volume_arsip, 2) }} ml</td>
             </tr>
             <tr>
-                <td><span class="bold">Tanggal Mulai:</span> {{ $task->tgl_mulai }}</td>
-                <td><span class="bold">Tanggal Selesai:</span> {{ $task->tgl_selesai }}</td>
+                <td><span class="bold">Tanggal Mulai:</span> {{ $taskAlihMedia->tgl_mulai }}</td>
+                <td><span class="bold">Tanggal Selesai:</span> {{ $taskAlihMedia->tgl_selesai }}</td>
             </tr>
             <tr>
-                <td><span class="bold">Total Hari Kerja:</span> {{ $task->total_hari_kerja }}</td>
-                <td><span class="bold">Deskripsi:</span> {{ $task->deskripsi_pekerjaan }}</td>
+                <td><span class="bold">Total Hari Kerja:</span> {{ $taskAlihMedia->total_hari_kerja }}</td>
+                <td><span class="bold">Deskripsi:</span> {{ $taskAlihMedia->deskripsi_pekerjaan }}</td>
             </tr>
         </table>
 
@@ -85,13 +85,13 @@
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td>{{ $task->user->name ?? '-' }}</td>
+                    <td>{{ $taskAlihMedia->user->name ?? '-' }}</td>
                     <td>Project Manager</td>
-                    <td>{{ $task->no_telp_pm ?? '-' }}</td>
+                    <td>{{ $taskAlihMedia->no_telp_pm ?? '-' }}</td>
                 </tr>
                 @php $no = 2; @endphp
-                @forelse ($task->pelaksana ?? [] as $item)
-                    @if(isset($task->user) && $item['nama'] == $task->user->name)
+                @forelse ($taskAlihMedia->pelaksana ?? [] as $item)
+                    @if(isset($taskAlihMedia->user) && $item['nama'] == $taskAlihMedia->user->name)
                         @continue
                     @endif
                     <tr>
@@ -118,10 +118,10 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($task->taskWeekOverviews as $week)
+                @forelse ($taskAlihMedia->taskWeekAlihMedia as $week)
                     <tr>
                         <td>{{ $week->nama_week }}</td>
-                        <td> {{ number_format($week->target_minggu, 2) }} ml</td>
+                        <td>{{ number_format($week->total_volume, 2) }} ml</td>
                         <td>{{ $week->hari_kerja }} hari</td>
                     </tr>
                 @empty

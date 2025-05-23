@@ -15,6 +15,14 @@ Route::get('/test-db-limit', function () {
     return response()->view('errors.db-limit', [], 429);
 });
 
-// Route print dipindah ke luar, agar tidak di-nest secara salah
+// ------------------------------
+// Route untuk Cetak PDF
+// ------------------------------
+
+// Cetak task reguler
 Route::get('/task/{task}/print', [TaskPrintController::class, 'print'])
     ->name('task.print');
+
+// Cetak task alih media
+Route::get('/task-alih-media/{taskAlihMedia}/print', [TaskPrintController::class, 'printAlihMedia'])
+    ->name('task-alih-media.print');
