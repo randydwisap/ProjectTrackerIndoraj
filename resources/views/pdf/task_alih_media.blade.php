@@ -47,8 +47,8 @@
             padding: 0;
             font-family: 'Times New Roman', serif;
             font-size: 12pt;
-            background-image: url("{{ public_path('storage/kop.jpg') }}");
-            background-size: cover;
+            background-image: url('{{ storage_path("app/public/kop.jpg") }}');
+            background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: top center;
             height: 100vh;
@@ -72,6 +72,13 @@
 
         .section {
             margin-bottom: 15px;
+        }
+
+        .section-tugas {
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: underline;
         }
 
         table {
@@ -107,10 +114,10 @@
         <table>
             <tr><td>Nama</td><td>: Fransiscus Setyadji, S.H.</td></tr>
             <tr><td>Jabatan</td><td>: Direktur</td></tr>
-            <tr><td>Alamat</td><td>: Jl. Kapuas No. 12, Bumi Rejo, Blimbingsari, Kota Malang</td></tr>
+            <tr><td>Alamat</td><td>: Jl. Kapuas No. 12, Bunulrejo, Blimbing, Kota Malang</td></tr>
         </table>
 
-        <p class="section"><strong>MENUGASKAN</strong></p>
+        <p class="section-tugas"><strong>MENUGASKAN</strong></p>
 
 <h3 class="section-title">A. Kepada</h3>
 <ol type="1" style="padding-left: 20px;">
@@ -127,7 +134,6 @@
         <li>
             Nama : <span>{{ $item['nama'] ?? '-' }}</span><br>
             Jabatan : <span>Pelaksana</span><br>
-            Kontak : <span>{{ $item['kontak'] ?? '-' }}</span>
         </li>
     @empty
         <li>
@@ -136,7 +142,7 @@
     @endforelse
 </ol>
         <div class="section">
-            <strong>B. Untuk</strong>: Pelaksanaan Pekerjaan
+            <strong>B. Untuk</strong>: Pelaksanaan Pekerjaan {{ $taskAlihMedia->pekerjaan}}
         </div>
 
         <div class="section">
@@ -152,10 +158,10 @@
             Malang, {{ \Carbon\Carbon::parse($taskAlihMedia->created_at)->translatedFormat('d F Y') }}<br>
             Pelaksana Tugas Direktur,<br><br><br>
             <div class="ttd-container">
-                <img src="{{ public_path('storage/ttd.jpg') }}" alt="Tanda Tangan" class="ttd-image">
-                <img src="{{ public_path('storage/stamp.png') }}" alt="Stempel" class="stamp-image">
+                <img src="{{ storage_path('app/public/ttd.jpg') }}"alt="Tanda Tangan" class="ttd-image">
+                <img src="{{ storage_path('app/public/stamp.png') }}" alt="Stempel"  class="stamp-image">
             </div>
-            <span>Eduardus Satrio Trisuseno Setyadji</span><br>
+            <span>Eduardus Satrio Trenggono Setyadji</span><br>
         </div>
     </div>
 </body>
