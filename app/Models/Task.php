@@ -45,6 +45,7 @@ class Task extends Model
         'hasil_pemilahan',
         'total_hari_kerja',
         'marketing_id',
+        'alamat',
     ];
     public function Telepon()
     {

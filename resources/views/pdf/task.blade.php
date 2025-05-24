@@ -1,138 +1,161 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SPT - {{ $task->pekerjaan }} | {{ $task->klien }}</title>
+    <meta charset="utf-8">
+    <title>Surat Tugas - {{ $task->pekerjaan }}</title>
     <style>
         @page {
-            margin: 0;
+            margin: 0cm;
         }
-
-        .content {
-    margin-top: 75px; /* contoh: tambahkan margin top lebih besar */
+        
+.ttd {
+    text-align: right;
+    margin-top: 50px;    
 }
+
+.ttd-container {
+    display: inline-block;
+    width: 180px; /* Sesuaikan dengan ukuran gambar tanda tangan */
+    position: relative;
+    margin-left: 80%;
+    margin-top: 0;
+    text-align: center; /* Supaya stempel dan ttd sejajar */
+}
+
+.ttd-image {
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.stamp-image {
+    position: absolute;
+    top: 0px;              /* atau coba 5px jika ingin agak turun */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;           /* Ukuran stempel */
+    z-index: 2;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+
 
         body {
             margin: 0;
-            padding: 100px 50px 50px 50px;
-            background-image: url("{{ public_path('storage/kop.jpg') }}");
-            background-image: url('{{ storage_path("app/public/kop.jpg") }}'); untuk deploy
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
+            padding: 0;
             font-family: 'Times New Roman', serif;
             font-size: 12pt;
-            color: #000;
-            line-height: 1.4;
+            background-image: url("{{ public_path('storage/kop.jpg') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: top center;
+            height: 100vh;
+        }
+
+        .content {
+            padding: 230px 50px 50px 50px; /* atur sesuai posisi kop */
+        }
+
+        .judul {
+            font-weight: bold;
+            text-align: center;
+            text-decoration: underline;
+            margin: 0;
+        }
+
+        .nomor-surat {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 15px;
         }
 
         table {
-            border-collapse: collapse;
             width: 100%;
-            font-size: 11pt;
+            font-size: 12pt;
         }
 
-        th, td {
-            padding: 2px 6px; /* Lebih rapat */
+        td {
             vertical-align: top;
         }
 
-        .two-column-table td {
-            width: 50%;
+        .ttd {
+            text-align: right;
+            margin-top: 50px;
         }
 
-        .section-title {
-            font-size: 14pt;
-            margin-top: 1em;
-            margin-bottom: 0.5em;
-        }
-
-        .bold {
+        .red {
+            color: red;
             font-weight: bold;
+        }
+
+        u {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="content">
-        <h2>SPT Proyek: {{ $task->pekerjaan }}</h2>
+        <h3 class="judul">SURAT TUGAS</h3>
+        <div class="nomor-surat">{{ $task->nomor_st}}</div>
 
-        <table class="two-column-table">
-            <tr>
-                <td><span class="bold">Klien:</span> {{ $task->klien }}</td>
-                <td><span class="bold">Lokasi:</span> {{ $task->lokasi }}</td>
-            </tr>
-            <tr>
-                <td><span class="bold">Jenis Arsip:</span> {{ $task->jenis_arsip }}</td>
-                <td><span class="bold">Total Volume:</span> {{ number_format($task->volume_arsip, 2) }} ml</td>
-            </tr>
-            <tr>
-                <td><span class="bold">Tanggal Mulai:</span> {{ $task->tgl_mulai }}</td>
-                <td><span class="bold">Tanggal Selesai:</span> {{ $task->tgl_selesai }}</td>
-            </tr>
-            <tr>
-                <td><span class="bold">Total Hari Kerja:</span> {{ $task->total_hari_kerja }}</td>
-                <td><span class="bold">Deskripsi:</span> {{ $task->deskripsi_pekerjaan }}</td>
-            </tr>
+        <p>Yang bertanda tangan di bawah ini:</p>
+        <table>
+            <tr><td>Nama</td><td>: Fransiscus Setyadji, S.H.</td></tr>
+            <tr><td>Jabatan</td><td>: Direktur</td></tr>
+            <tr><td>Alamat</td><td>: Jl. Kapuas No. 12, Bumi Rejo, Blimbingsari, Kota Malang</td></tr>
         </table>
 
-        <h3 class="section-title">Pelaksana</h3>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Nama</th>
-                    <th>Jabatan</th>
-                    <th>Kontak</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>{{ $task->user->name ?? '-' }}</td>
-                    <td>Project Manager</td>
-                    <td>{{ $task->no_telp_pm ?? '-' }}</td>
-                </tr>
-                @php $no = 2; @endphp
-                @forelse ($task->pelaksana ?? [] as $item)
-                    @if(isset($task->user) && $item['nama'] == $task->user->name)
-                        @continue
-                    @endif
-                    <tr>
-                        <td>{{ $no++ }}</td>
-                        <td>{{ $item['nama'] ?? '-' }}</td>
-                        <td>Pelaksana</td>
-                        <td>{{ $item['kontak'] ?? '-' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4">Tidak ada pelaksana tersedia.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <p class="section"><strong>MENUGASKAN</strong></p>
 
-        <h3 class="section-title">Rangkuman Mingguan</h3>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Minggu ke-</th>
-                    <th>Target</th>
-                    <th>Hari Kerja</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($task->taskWeekOverviews as $week)
-                    <tr>
-                        <td>{{ $week->nama_week }}</td>
-                        <td> {{ number_format($week->target_minggu, 2) }} ml</td>
-                        <td>{{ $week->hari_kerja }} hari</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3">Tidak ada data mingguan tersedia.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+<h3 class="section-title">A. Kepada</h3>
+<ol type="1" style="padding-left: 20px;">
+    <li>
+        Nama : <span>{{ $task->user->name ?? '-' }}</span><br>
+        Jabatan : <span>Project Manager</span><br>
+        Kontak : <span>{{ $task->no_telp_pm ?? '-' }}</span>
+    </li>
+    @php $no = 2; @endphp
+    @forelse ($task->pelaksana ?? [] as $item)
+        @if(isset($task->user) && $item['nama'] == $task->user->name)
+            @continue
+        @endif
+        <li>
+            Nama : <span>{{ $item['nama'] ?? '-' }}</span><br>
+            Jabatan : <span>Pelaksana</span><br>
+            Kontak : <span>{{ $item['kontak'] ?? '-' }}</span>
+        </li>
+    @empty
+        <li>
+            <em>Tidak ada pelaksana tersedia.</em>
+        </li>
+    @endforelse
+</ol>
+        <div class="section">
+            <strong>B. Untuk</strong>: Pelaksanaan Pekerjaan
+        </div>
+
+        <div class="section">
+            <strong>C. Waktu</strong>:  {{ \Carbon\Carbon::parse($task->tgl_mulai)->translatedFormat('d F Y') }} –  {{ \Carbon\Carbon::parse($task->tgl_selesai)->translatedFormat('d F Y') }}
+        </div>
+
+        <div class="section">
+            <strong>D. Tempat</strong>: {{ $task->alamat}} <br>
+            {{ $task->lokasi }}
+        </div>
+
+        <div class="ttd">
+            Malang, {{ \Carbon\Carbon::parse($task->created_at)->translatedFormat('d F Y') }}<br>
+            Pelaksana Tugas Direktur,<br><br><br>
+            <div class="ttd-container">
+                <img src="{{ public_path('storage/ttd.jpg') }}" alt="Tanda Tangan" class="ttd-image">
+                <img src="{{ public_path('storage/stamp.png') }}" alt="Stempel" class="stamp-image">
+            </div>
+            <span>Eduardus Satrio Trisuseno Setyadji</span><br>
+        </div>
     </div>
 </body>
 </html>

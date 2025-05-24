@@ -263,6 +263,11 @@ class TaskResource extends Resource
                     })
                     ->required(),
 
+            Forms\Components\Textarea::make('alamat')
+                ->label('Alamat')
+                ->rows(3)
+                ->required(),
+
             Forms\Components\TextInput::make('hasil_pemilahan')
                 ->label('Volume Arsip Pemilahan(mL)')
                 ->prefix('mL ')

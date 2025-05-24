@@ -246,6 +246,11 @@ class TaskAlihMediaResource extends Resource
                     })
                     ->required(),
 
+            Forms\Components\Textarea::make('alamat')
+                ->label('Alamat')
+                ->rows(3)
+                ->required(),
+
             Forms\Components\Select::make('jenis_arsip')
                 ->label('Jenis Arsip')
                 ->options([

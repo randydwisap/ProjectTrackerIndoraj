@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\TaskAlihMedia;
 use Illuminate\Http\Request;
+\Carbon\Carbon::setLocale('id');
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class TaskPrintController extends Controller

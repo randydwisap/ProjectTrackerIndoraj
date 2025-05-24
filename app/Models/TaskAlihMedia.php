@@ -41,6 +41,7 @@ class TaskAlihMedia extends Model
         'telepon',        
         'marketing_id',
         'total_hari_kerja',
+        'alamat',
     ];
 
     public function Telepon()

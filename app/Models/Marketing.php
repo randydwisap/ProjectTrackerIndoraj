@@ -63,6 +63,7 @@ class Marketing extends Model
         'pencairan',
         'dasar_pengenaan_pajak',
         'note_operasional',
+        'isArchived',
     ];
 
     
