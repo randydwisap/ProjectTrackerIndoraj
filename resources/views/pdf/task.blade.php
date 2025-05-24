@@ -107,7 +107,7 @@
 <body>
     <div class="content">
         <h3 class="judul">SURAT TUGAS</h3>
-        <div class="nomor-surat">{{ $task->nomor_st}}</div>
+        <div class="nomor-surat">{{ $task->no_st}}</div>
 
         <p>Yang bertanda tangan di bawah ini:</p>
         <table>

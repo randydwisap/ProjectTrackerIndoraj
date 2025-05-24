@@ -550,7 +550,7 @@ Forms\Components\Textarea::make('marketing_note_operasional')
                 Tables\Actions\Action::make('Print')
                 ->url(fn ($record) => url('/task/' . $record->id . '/print'))
                 ->icon('heroicon-o-printer')
-                ->openUrlInNewTab(),
+                ->openUrlInNewTab(),                
                     ])
                     ->bulkActions([
                         Tables\Actions\DeleteBulkAction::make(),
