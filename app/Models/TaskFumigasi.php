@@ -9,6 +9,7 @@ use Carbon\Carbon;
 class TaskFumigasi extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'pekerjaan',
         'klien',
@@ -32,53 +33,78 @@ class TaskFumigasi extends Model
         'target_perday',
         'telepon',
         'marketing_id',
+        'alamat',
+        'no_st',
+        'tgl_surat',
     ];
-       // Ubah `pelaksana` menjadi array secara otomatis
-       protected $casts = [
+
+    protected $casts = [
         'pelaksana' => 'array',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'project_manager'); // Relasi ke User
+        return $this->belongsTo(User::class, 'project_manager');
     }
-    
 
     protected static function boot()
     {
         parent::boot();
 
-        static::saving(function ($taskaplikasi) {
-            $taskaplikasi->hitungDurasiDanLamaPekerjaan();
-        });
+        static::saving(function ($taskfumigasi) {
+            $taskfumigasi->hitungDurasiDanLamaPekerjaan();
 
-        static::updating(function ($taskaplikasi) {
-            $taskaplikasi->hitungDurasiDanLamaPekerjaan();
-        });
-
-        static::created(function ($taskaplikasi) {
-            // Update status marketing menjadi "On Hold"
-            if ($taskaplikasi->marketing_id) {
-                $marketing = Marketing::find($taskaplikasi->marketing_id);
+            // Update status marketing jika status task 'Completed'
+            if ($taskfumigasi->status === 'Completed' && $taskfumigasi->marketing_id) {
+                $marketing = Marketing::find($taskfumigasi->marketing_id);
                 if ($marketing) {
-                    $marketing->status = 'On Hold'; // Ubah status
-                    $marketing->save(); // Simpan perubahan
+                    $marketing->status = 'Completed';
+                    $marketing->save();
                 }
             }
+        });
 
-            $durasiProyek = $taskaplikasi->durasi_proyek;
+        static::updating(function ($taskfumigasi) {
+            $taskfumigasi->hitungDurasiDanLamaPekerjaan();
+
+            // Update status marketing jika status task 'Completed'
+            if ($taskfumigasi->status === 'Completed' && $taskfumigasi->marketing_id) {
+                $marketing = Marketing::find($taskfumigasi->marketing_id);
+                if ($marketing) {
+                    $marketing->status = 'Completed';
+                    $marketing->save();
+                }
+            }
+        });
+
+        static::created(function ($taskfumigasi) {
+            // Update status marketing menjadi "Pengerjaan" saat dibuat
+            if ($taskfumigasi->marketing_id) {
+                $marketing = Marketing::find($taskfumigasi->marketing_id);
+                if ($marketing) {
+                    $marketing->status = $taskfumigasi->status === 'Completed' ? 'Completed' : 'Pengerjaan';
+                    $marketing->save();
+                }
+            }
+        });
+        
+        static::deleting(function ($taskfumigasi) {
+        if ($taskfumigasi->marketing_id) {
+            $marketing = Marketing::find($taskfumigasi->marketing_id);
+            if ($marketing) {
+                $marketing->status = 'Persiapan Operasional';
+                $marketing->save();
+            }
+        }
         });
     }
+
     public function hitungDurasiDanLamaPekerjaan()
     {
         if ($this->tgl_mulai && $this->tgl_selesai) {
             $start = Carbon::parse($this->tgl_mulai);
             $end = Carbon::parse($this->tgl_selesai);
-            
-            // Hitung lama pekerjaan dalam hari
             $this->lama_pekerjaan = $start->diffInDays($end);
-            
-            // Hitung durasi proyek dalam minggu
             $this->durasi_proyek = ceil($this->lama_pekerjaan / 7);
         } else {
             $this->lama_pekerjaan = 0;
@@ -88,20 +114,21 @@ class TaskFumigasi extends Model
 
     public function taskfumigasi()
     {
-    return $this->belongsTo(TaskFumigasi::class);
+        return $this->belongsTo(TaskFumigasi::class);
     }
 
     public function jenistahapfumigasi()
     {
         return $this->hasMany(JenisTahapAplikasi::class);
     }
+
     public function marketing()
     {
-    return $this->belongsTo(Marketing::class);
+        return $this->belongsTo(Marketing::class);
     }
 
     public function reportfumigasi()
-{
-    return $this->hasMany(ReportFumigasi::class);
-}
+    {
+        return $this->hasMany(ReportFumigasi::class);
+    }
 }

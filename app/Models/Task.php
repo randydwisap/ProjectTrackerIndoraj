@@ -47,6 +47,7 @@ class Task extends Model
         'marketing_id',
         'alamat',
         'no_st',
+        'tgl_surat',
     ];
     public function Telepon()
     {
@@ -120,6 +121,16 @@ class Task extends Model
                     $marketing->status = 'Pengerjaan'; // Ubah status
                     $marketing->save(); // Simpan perubahan
                 }
+            }
+        }
+        });
+
+        static::deleting(function ($task) {
+        if ($task->marketing_id) {
+            $marketing = Marketing::find($task->marketing_id);
+            if ($marketing) {
+                $marketing->status = 'Persiapan Operasional';
+                $marketing->save();
             }
         }
         });
@@ -211,6 +222,11 @@ public function hitungStatus()
     $this->dikerjakan_step1 >= $this->volume_arsip
 ) {
         $this->status = 'Completed';
+        $marketing = Marketing::find($this->marketing_id);
+        if ($marketing) {
+            $marketing->status = 'Completed'; // Ubah status
+            $marketing->save(); // Simpan perubahan
+        }
     } elseif ($this->volume_arsip > 0) {
         $persentase = ($this->volume_dikerjakan  / ($this->volume_arsip * 3)) * 100;
 

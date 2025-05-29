@@ -5,14 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Setting extends Model
+class JenisInstrumen extends Model
 {
+    protected $fillable = ['nama_task'];
     use HasFactory;
-
-    protected $fillable = [
-        'id',
-        'ppn',
-        'pph',
-        'pph_barang'
-    ];
 }

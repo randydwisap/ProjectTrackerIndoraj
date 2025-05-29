@@ -43,6 +43,7 @@ class TaskAlihMedia extends Model
         'total_hari_kerja',
         'alamat',
         'no_st',
+        'tgl_surat',
     ];
 
     public function Telepon()
@@ -114,6 +115,16 @@ class TaskAlihMedia extends Model
             $taskWeek->save();             
             }
         });
+        static::deleting(function ($taskAlihMedia) {
+        if ($taskAlihMedia->marketing_id) {
+            $marketing = Marketing::find($taskAlihMedia->marketing_id);
+            if ($marketing) {
+                $marketing->status = 'Persiapan Operasional';
+                $marketing->save();
+            }
+        }
+        });
+
     }
 
 /**
@@ -174,6 +185,11 @@ class TaskAlihMedia extends Model
         $this->dikerjakan_step1 >= $this->volume_arsip
     ) {
             $this->status = 'Completed';
+            $marketing = Marketing::find($this->marketing_id);
+            if ($marketing) {
+                $marketing->status = 'Completed'; // Ubah status
+                $marketing->save(); // Simpan perubahan
+            }
         } elseif ($this->volume_arsip > 0) {
             $jumlahTahap = \App\Models\JenisTaskAlihMedia::count();
             $persentase = ($this->volume_dikerjakan / $this->volume_arsip * $jumlahTahap) * 100;

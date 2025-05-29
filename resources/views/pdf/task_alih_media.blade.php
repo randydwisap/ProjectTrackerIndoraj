@@ -9,38 +9,40 @@
             margin: 0cm;
         }
         
-.ttd {
-    text-align: right;
-    margin-top: 50px;    
-}
-
-.ttd-container {
-    display: inline-block;
-    width: 180px; /* Sesuaikan dengan ukuran gambar tanda tangan */
-    position: relative;
-    margin-left: 80%;
-    margin-top: 0;
-    text-align: center; /* Supaya stempel dan ttd sejajar */
-}
-
-.ttd-image {
-    width: 100%;
-    position: relative;
-    z-index: 1;
-}
-
-.stamp-image {
-    position: absolute;
-    top: 0px;              /* atau coba 5px jika ingin agak turun */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90px;           /* Ukuran stempel */
-    z-index: 2;
-    opacity: 0.9;
-    pointer-events: none;
-}
+        
+        .ttd {
+            width: 300px;              /* Atur lebar sesuai kebutuhan */
+            text-align: left;          /* Teks rata kiri */
+            margin-top: 50px;
+            margin-left: 80%;         /* Dorong elemen ke kanan */
+        }
 
 
+        .ttd-container {
+            display: inline-block;
+            width: 180px; /* Sesuaikan dengan ukuran gambar tanda tangan */
+            position: relative;
+            margin-right: 20%;
+            margin-top: 2%;
+            text-align: center; /* Supaya stempel dan ttd sejajar */
+        }
+
+        .ttd-image {
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stamp-image {
+            position: absolute;
+            top: -25px;              /* atau coba 5px jika ingin agak turun */
+            left: 20%;
+            transform: translateX(-50%);
+            width: 90px;           /* Ukuran stempel */
+            z-index: 2;
+            opacity: 0.9;
+            pointer-events: none;
+        }
 
         body {
             margin: 0;
@@ -73,7 +75,7 @@
         .section {
             margin-bottom: 15px;
         }
-
+        
         .section-tugas {
             margin-bottom: 15px;
             font-weight: bold;
@@ -88,11 +90,6 @@
 
         td {
             vertical-align: top;
-        }
-
-        .ttd {
-            text-align: right;
-            margin-top: 50px;
         }
 
         .red {
@@ -114,7 +111,7 @@
         <table>
             <tr><td>Nama</td><td>: Fransiscus Setyadji, S.H.</td></tr>
             <tr><td>Jabatan</td><td>: Direktur</td></tr>
-            <tr><td>Alamat</td><td>: Jl. Kapuas No. 12, Bunulrejo, Blimbing, Kota Malang</td></tr>
+            <tr><td>Alamat</td><td>: Jl. Sanan IA/33, Purwantoro, Blimbing, Kota Malang</td></tr>
         </table>
 
         <p class="section-tugas"><strong>MENUGASKAN</strong></p>
@@ -155,13 +152,13 @@
         </div>
 
         <div class="ttd">
-            Malang, {{ \Carbon\Carbon::parse($taskAlihMedia->created_at)->translatedFormat('d F Y') }}<br>
-            Pelaksana Tugas Direktur,<br><br><br>
+            Malang, {{ \Carbon\Carbon::parse($taskAlihMedia->tgl_surat)->translatedFormat('d F Y') }}<br>
+            Direktur,<br><br><br>
             <div class="ttd-container">
                 <img src="{{ storage_path('app/public/ttd.jpg') }}"alt="Tanda Tangan" class="ttd-image">
                 <img src="{{ storage_path('app/public/stamp.png') }}" alt="Stempel"  class="stamp-image">
             </div>
-            <span>Eduardus Satrio Trenggono Setyadji</span><br>
+            <span>Fransiscus Setyadji, S.H.</span><br>
         </div>
     </div>
 </body>

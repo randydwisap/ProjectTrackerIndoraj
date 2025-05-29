@@ -56,8 +56,10 @@ class MarketingResource extends Resource
                         'Alih Media' => 'Alih Media',
                         'Fumigasi' => 'Fumigasi',
                         'Aplikasi' => 'Aplikasi',
+                        'Penyusunan Instrumen' => 'Penyusunan Instrumen',
+                        'Pengadaan Barang' => 'Pengadaan Barang',
                     ]
-                )->required()->label('Jenis Pekerjaan'),
+                )->label('Jenis Pekerjaan'),
                 Forms\Components\TextInput::make('nama_klien')->required()->label('Nama Klien'),
                 //Forms\Components\TextInput::make('lokasi')->required(),
                 Forms\Components\Select::make('lokasi')
@@ -91,7 +93,7 @@ class MarketingResource extends Resource
                         'Kontrak' => 'Kontrak',
                     ]
                 ),
-                Forms\Components\TextInput::make('total_volume')->label('Volume Pekerjaan')->numeric()->required(),
+                Forms\Components\TextInput::make('total_volume')->label('Volume Pekerjaan')->numeric(),
                 Forms\Components\Select::make('nama_pic')
                         ->relationship('manager', 'name')
                         ->default(auth()->id()) // otomatis isi user yang login
@@ -101,7 +103,6 @@ class MarketingResource extends Resource
                         ->label('Nama PIC'),
                 Forms\Components\Select::make('project_manager')
                         ->relationship('manager', 'name')
-                        ->required()
                         ->label('Project Manager'),
                 Forms\Components\Select::make('status')->options([
                         'Ditolak' => 'Ditolak',
@@ -126,7 +127,7 @@ class MarketingResource extends Resource
                 //         ->required(),
                     
                 Forms\Components\TextInput::make('jumlah_sdm')->required()->label('Jumlah SDM')->numeric(),
-                Forms\Components\TextInput::make('nilai_proyek')->required()->label('Nilai Proyek')->numeric()->prefix('Rp '),
+                Forms\Components\TextInput::make('nilai_proyek')->required()->label('Nilai Penawaran')->numeric()->prefix('Rp '),
                 Forms\Components\TextInput::make('link_rab')->nullable()->label('Link RAB'), 
                 // Forms\Components\DatePicker::make('tgl_mulai')
                 //         ->label('Tanggal Mulai')
@@ -164,7 +165,6 @@ class MarketingResource extends Resource
 
                 Forms\Components\FileUpload::make('dokumentasi_foto')
                         ->multiple()
-                        ->required()
                         ->directory('marketing_foto')
                         ->image()
                         ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
@@ -176,7 +176,7 @@ class MarketingResource extends Resource
                     
                             return "marketing_{$marketingId}_fotoabsen_{$counter}." . $file->getClientOriginalExtension();
                         }),
-                Forms\Components\FileUpload::make('lampiran')->required()->acceptedFileTypes(['application/pdf'])->directory('marketing_lampiran'),
+                Forms\Components\FileUpload::make('lampiran')->acceptedFileTypes(['application/pdf'])->directory('marketing_lampiran')->helperText('Upload Form Suvey'),
                 Forms\Components\Textarea::make('note')->label('Catatan'),
                 Forms\Components\Textarea::make('note_operasional')->label('Catatan Operasional'),
             ]);
@@ -237,6 +237,7 @@ class MarketingResource extends Resource
                         'In Progress' => 'warning',
                         'Ditolak' => 'danger',
                         'Pengerjaan' => 'gray',
+                        'Completed' => 'gray',
                         'Persiapan Operasional' => 'gray',
                         default => 'secondary',
                     }),
@@ -353,20 +354,30 @@ class MarketingResource extends Resource
     ->afterStateUpdated(function ($state, $set, $get) {
         $settings = \App\Models\Setting::first();
         $ppnPercentage = $settings->ppn ?? 11;
-        
+
+        // Ambil dari record jika 'jenis_pekerjaan' tidak merupakan form field
+        $record = $get(null); // atau request()->route('record')
+        $jenisPekerjaan = $get('jenis_pekerjaan') ?? $record?->jenis_pekerjaan;
+
+        $pphPercentage = ($jenisPekerjaan === 'Pengadaan Barang')
+            ? ($settings->pph_barang ?? 1.5)
+            : ($settings->pph ?? 2);
+
+        // Format angka dari input string
         $nilaiTermasukPPN = (float) str_replace(',', '', $state);
+
+        // Perhitungan
         $dasarPengenaanPajak = round(($nilaiTermasukPPN * 100) / (100 + $ppnPercentage), 2);
         $ppn = round($dasarPengenaanPajak * ($ppnPercentage / 100), 2);
-        $pphPercentage = $settings->pph ?? 2;
         $pph = round($dasarPengenaanPajak * ($pphPercentage / 100), 2);
         $pencairan = round($dasarPengenaanPajak - $pph, 2);
-        
+
+        // Set hasil ke field lain
         $set('dasar_pengenaan_pajak', $dasarPengenaanPajak);
         $set('ppn', $ppn);
         $set('pph', $pph);
         $set('pencairan', $pencairan);
     }),
-
     Forms\Components\TextInput::make('dasar_pengenaan_pajak')
         ->label('Dasar Pengenaan Pajak (DPP)')
         ->numeric()
@@ -389,30 +400,43 @@ class MarketingResource extends Resource
             return number_format($dpp * (($settings->ppn ?? 11) / 100), 2, '.', '');
         }),
 
-    Forms\Components\TextInput::make('pph')
-        ->label('PPH')
-        ->numeric()
-        ->prefix('Rp ')
-        ->required()
-        ->default(function ($record) {
-            $settings = \App\Models\Setting::first();
-            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
-            $dpp = ($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100;
-            return number_format($dpp * (($settings->pph ?? 2) / 100), 2, '.', '');
-        }),
+Forms\Components\TextInput::make('pph')
+    ->label('PPH')
+    ->numeric()
+    ->prefix('Rp ')
+    ->required()
+    ->default(function ($record) {
+        $settings = \App\Models\Setting::first();
+        $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+        $jenisPekerjaan = $record?->jenis_pekerjaan ?? '';
 
+        $ppnPercentage = $settings->ppn ?? 11;
+        $pphPercentage = ($jenisPekerjaan === 'Pengadaan Barang')
+            ? ($settings->pph_barang ?? 1.5)
+            : ($settings->pph ?? 2);
+
+        $dpp = ($nilaiTermasukPPN / (100 + $ppnPercentage)) * 100;
+        return number_format($dpp * ($pphPercentage / 100), 2, '.', '');
+    }),
     Forms\Components\TextInput::make('pencairan')
-        ->label('Nilai Pencairan (DPP - PPH)')
-        ->numeric()
-        ->prefix('Rp ')
-        ->required()
-        ->default(function ($record) {
-            $settings = \App\Models\Setting::first();
-            $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
-            $dpp = ($nilaiTermasukPPN / (100 + ($settings->ppn ?? 11))) * 100;
-            $pph = $dpp * (($settings->pph ?? 2) / 100);
-            return number_format($dpp - $pph, 2, '.', '');
-        }),
+    ->label('Nilai Pencairan (DPP - PPH)')
+    ->numeric()
+    ->prefix('Rp ')
+    ->required()
+    ->default(function ($record) {
+        $settings = \App\Models\Setting::first();
+        $nilaiTermasukPPN = $record?->nilai_akhir_proyek ?? $record?->nilai_proyek ?? 0;
+        $jenisPekerjaan = $record?->jenis_pekerjaan ?? '';
+
+        $ppnPercentage = $settings->ppn ?? 11;
+        $pphPercentage = ($jenisPekerjaan === 'Pengadaan Barang')
+            ? ($settings->pph_barang ?? 1.5)
+            : ($settings->pph ?? 2);
+
+        $dpp = ($nilaiTermasukPPN / (100 + $ppnPercentage)) * 100;
+        $pph = $dpp * ($pphPercentage / 100);
+        return number_format($dpp - $pph, 2, '.', '');
+    }),
     
     Forms\Components\TextInput::make('terms_of_payment')
         ->label('Terms of Payment')

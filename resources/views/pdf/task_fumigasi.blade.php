@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+    {{-- /* background-image: url('{{ storage_path("app/public/kop.jpg") }}'); untuk deploy */ --}}
     <meta charset="utf-8">
-    <title>Surat Tugas - {{ $task->pekerjaan }}</title>
+    <title>Surat Tugas - {{ $taskFumigasi->pekerjaan }}</title>
     <style>
         @page {
             margin: 0cm;
         }
+        
         
         .ttd {
             width: 300px;              /* Atur lebar sesuai kebutuhan */
@@ -103,7 +105,7 @@
 <body>
     <div class="content">
         <h3 class="judul">SURAT TUGAS</h3>
-        <div class="nomor-surat">{{ $task->no_st}}</div>
+        <div class="nomor-surat">{{ $taskFumigasi->no_st}}</div>
 
         <p>Yang bertanda tangan di bawah ini:</p>
         <table>
@@ -117,13 +119,13 @@
 <h3 class="section-title">A. Kepada</h3>
 <ol type="1" style="padding-left: 20px;">
     <li>
-        Nama : <span>{{ $task->user->name ?? '-' }}</span><br>
+        Nama : <span>{{ $taskFumigasi->user->name ?? '-' }}</span><br>
         Jabatan : <span>Project Manager</span><br>
-        Kontak : <span>{{ $task->no_telp_pm ?? '-' }}</span>
+        Kontak : <span>{{ $taskFumigasi->no_telp_pm ?? '-' }}</span>
     </li>
     @php $no = 2; @endphp
-    @forelse ($task->pelaksana ?? [] as $item)
-        @if(isset($task->user) && $item['nama'] == $task->user->name)
+    @forelse ($taskFumigasi->pelaksana ?? [] as $item)
+        @if(isset($taskFumigasi->user) && $item['nama'] == $taskFumigasi->user->name)
             @continue
         @endif
         <li>
@@ -137,20 +139,20 @@
     @endforelse
 </ol>
         <div class="section">
-            <strong>B. Untuk</strong>: Pelaksanaan Pekerjaan {{ $task->pekerjaan}}
+            <strong>B. Untuk</strong>: Pelaksanaan Pekerjaan {{ $taskFumigasi->pekerjaan}}
         </div>
 
         <div class="section">
-            <strong>C. Waktu</strong>:  {{ \Carbon\Carbon::parse($task->tgl_mulai)->translatedFormat('d F Y') }} –  {{ \Carbon\Carbon::parse($task->tgl_selesai)->translatedFormat('d F Y') }}
+            <strong>C. Waktu</strong>:  {{ \Carbon\Carbon::parse($taskFumigasi->tgl_mulai)->translatedFormat('d F Y') }} –  {{ \Carbon\Carbon::parse($taskFumigasi->tgl_selesai)->translatedFormat('d F Y') }}
         </div>
 
         <div class="section">
-            <strong>D. Tempat</strong>: {{ $task->alamat}} <br>
-            {{ $task->lokasi }}
+            <strong>D. Tempat</strong>: {{ $taskFumigasi->alamat}} <br>
+            {{ $taskFumigasi->lokasi }}
         </div>
 
         <div class="ttd">
-            Malang, {{ \Carbon\Carbon::parse($task->tgl_surat)->translatedFormat('d F Y') }}<br>
+            Malang, {{ \Carbon\Carbon::parse($taskFumigasi->tgl_surat)->translatedFormat('d F Y') }}<br>
             Direktur,<br><br><br>
             <div class="ttd-container">
                 <img src="{{ storage_path('app/public/ttd.jpg') }}"alt="Tanda Tangan" class="ttd-image">

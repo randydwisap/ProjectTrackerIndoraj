@@ -18,7 +18,7 @@ class RoleResource extends Resource
     protected static ?string $model = Role::class;
     protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
     protected static ?string $navigationGroup = 'Manajemen Akun';
-    protected static ?int $navigationSort = 2; // Menentukan urutan menu
+    protected static ?int $navigationSort = 5; // Menentukan urutan menu
     
     // ✅ Pastikan menu hanya bisa dilihat jika memiliki izin "role.view"
     public static function canViewAny(): bool

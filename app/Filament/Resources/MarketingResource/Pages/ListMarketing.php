@@ -41,6 +41,14 @@ Action::make('settings')
             ->default(fn () => Setting::first()->pph ?? 2.00)
             ->minValue(0)
             ->maxValue(100)
+            ->suffix('%'),
+        TextInput::make('pph_barang')
+            ->label('PPH Barang (%)')
+            ->numeric()
+            ->required()
+            ->default(fn () => number_format(Setting::first()->pph_barang ?? 1.50, 2, '.', ''))
+            ->minValue(0)
+            ->maxValue(100)
             ->suffix('%')
     ])
     ->action(function (array $data) {
@@ -48,7 +56,8 @@ Action::make('settings')
             ['id' => 1],
             [
                 'ppn' => $data['ppn'],
-                'pph' => $data['pph']
+                'pph' => $data['pph'],
+                'pph_barang' => $data['pph_barang'],
             ]
         );
         

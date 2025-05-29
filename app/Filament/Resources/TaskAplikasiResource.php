@@ -68,13 +68,12 @@ class TaskAplikasiResource extends Resource
                         $set('pekerjaan', $marketing->nama_pekerjaan);
                         $set('klien', $marketing->nama_klien);
                         $set('lokasi', $marketing->lokasi);
-                        $set('tgl_mulai', $marketing->tgl_mulai);
-                        $set('tgl_selesai', $marketing->tgl_selesai);
                         $set('nilai_proyek', $marketing->nilai_akhir_proyek);
                         $set('link_rab', $marketing->link_rab);
                         $set('volume', $marketing->total_volume);
                         $set('status', 'Behind Schedule');
                         $set('tahap_pengerjaan', 'Requirement Gathering');
+                        $set('marketing_note_operasional', $marketing->note_operasional);
                         
                         // Panggil update target setelah marketing_id diubah
                         self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -126,6 +125,7 @@ class TaskAplikasiResource extends Resource
             Forms\Components\DatePicker::make('tgl_mulai')
                 ->label('Tanggal Mulai')
                 ->required()
+                ->live()
                 ->default(now())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -135,6 +135,7 @@ class TaskAplikasiResource extends Resource
             Forms\Components\DatePicker::make('tgl_selesai')
                 ->label('Tanggal Selesai')
                 ->required()
+                ->live()
                 ->default(now())
                 ->afterStateUpdated(function ($state, callable $set, $get) {
                     self::updateDurasiDanLamaPekerjaan($set, $get);
@@ -188,6 +189,9 @@ class TaskAplikasiResource extends Resource
             Forms\Components\TextInput::make('volume')
                 ->label('Volume')
                 ->prefix('Satuan')
+                ->inputMode('decimal')
+                ->step(0.01) 
+                ->formatStateUsing(fn ($state) => number_format((float) $state, 2, '.', ''))
                 ->numeric()
                 ->required(),
 
@@ -234,6 +238,17 @@ class TaskAplikasiResource extends Resource
                 ->deletable(true)
                 ->default([])
                 ->required(),
+
+                Forms\Components\Textarea::make('marketing_note_operasional')
+                    ->label('Catatan Operasional Marketing')
+                    ->rows(5)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->afterStateHydrated(function (callable $set, $state, $get, $record) {
+                        if ($record?->marketing) {
+                            $set('marketing_note_operasional', $record->marketing->note_operasional);
+                        }
+                    }),
         ]);
     }
 
@@ -395,6 +410,7 @@ class TaskAplikasiResource extends Resource
 
     public static function calculateTargetPerminggu($get)
     {
+        $jumlahTahap = \App\Models\JenisTahapAplikasi::count();
         $volumeArsip = (float) $get('volume');
         $durasiProyek = (int) $get('durasi_proyek');
 
@@ -402,11 +418,12 @@ class TaskAplikasiResource extends Resource
             return 0;
         }
 
-        return round($volumeArsip / $durasiProyek, 2);
+        return round($volumeArsip * $jumlahTahap/ $durasiProyek, 2);
     }
 
     public static function calculateTargetPerDay($get)
     {
+        $jumlahTahap = \App\Models\JenisTahapAplikasi::count();
         $volumeArsip = (float) $get('volume');
         $lamaPekerjaan = (int) $get('lama_pekerjaan');
 
@@ -414,7 +431,7 @@ class TaskAplikasiResource extends Resource
             return 0;
         }
 
-        return round($volumeArsip / $lamaPekerjaan, 2);
+        return round($volumeArsip * $jumlahTahap / $lamaPekerjaan, 2);
     }
 
     /**
@@ -423,6 +440,7 @@ class TaskAplikasiResource extends Resource
     public static function updateTargetPerminggu(callable $set, $get)
     {
         $set('target_perminggu', self::calculateTargetPerminggu($get));
+        $set('target_perday', self::calculateTargetPerDay($get));
     }
 
     /**
@@ -437,7 +455,7 @@ class TaskAplikasiResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }
@@ -457,7 +475,7 @@ class TaskAplikasiResource extends Resource
         if (isset($data['marketing_id'])) {
             $marketing = Marketing::find($data['marketing_id']);
             if ($marketing) {
-                $marketing->status = 'On Hold'; // Ubah status
+                $marketing->status = 'Pengerjaan'; // Ubah status
                 $marketing->save(); // Simpan perubahan
             }
         }

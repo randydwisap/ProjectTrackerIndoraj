@@ -22,6 +22,18 @@ use App\Models\Marketing;
 use App\Filament\Resources\TaskResource\RelationManagers\TaskWeekOverviewRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\TaskDayDetailRelationManager;
 
+if (!function_exists('toRomawi')) {
+    function toRomawi($bulan)
+    {
+        $map = [
+            '01' => 'I', '02' => 'II', '03' => 'III', '04' => 'IV',
+            '05' => 'V', '06' => 'VI', '07' => 'VII', '08' => 'VIII',
+            '09' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII',
+        ];
+        return $map[str_pad($bulan, 2, '0', STR_PAD_LEFT)] ?? '';
+    }
+}
+
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
@@ -548,9 +560,89 @@ Forms\Components\Textarea::make('marketing_note_operasional')
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('Print')
-                ->url(fn ($record) => url('/task/' . $record->id . '/print'))
-                ->icon('heroicon-o-printer')
-                ->openUrlInNewTab(),                
+                    ->url(fn ($record) => url('/task/' . $record->id . '/print'))
+                    ->icon('heroicon-o-printer')
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => !empty($record->no_st) && !empty($record->tgl_surat)),
+                Tables\Actions\Action::make('Buat ST')
+                    ->visible(fn ($record) => 
+                        is_null($record->no_st) &&
+                        is_null($record->tgl_surat) &&
+                        (
+                            auth()->user()?->hasRole('Manajer Operasional') ||
+                            auth()->user()?->hasRole('Manajer Keuangan')
+                        )
+                    )
+                    ->label('Buat Surat Tugas')
+                    ->icon('heroicon-o-document-plus')
+                    ->form([
+                        Forms\Components\Fieldset::make('Nomor ST')
+                            ->columns(1)
+                            ->schema([
+                                Forms\Components\Grid::make(5)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('prefix_display')
+                                            ->default('DP.00.01')
+                                            ->disabled()
+                                            ->label(false),
+
+                                        Forms\Components\Hidden::make('prefix')
+                                            ->default('DP.00.01'),
+
+                                        Forms\Components\TextInput::make('kode')
+                                            ->helperText('Hanya isi bagian angka ini, misalnya: 092')
+                                            ->maxLength(3)
+                                            ->label(false),
+
+                                        Forms\Components\TextInput::make('unit_display')
+                                            ->default('IAM')
+                                            ->disabled()
+                                            ->label(false),
+
+                                        Forms\Components\Hidden::make('unit')
+                                            ->default('IAM'),
+
+                                        Forms\Components\TextInput::make('bulan_romawi_display')
+                                            ->default(fn ($livewire) => toRomawi(\Carbon\Carbon::parse($livewire->record->tgl_surat ?? now())->format('m')))
+                                            ->disabled()
+                                            ->reactive()
+                                            ->label(false),
+
+                                        Forms\Components\Hidden::make('bulan_romawi')
+                                            ->default(fn ($livewire) => toRomawi(\Carbon\Carbon::parse($livewire->record->tgl_surat ?? now())->format('m')))
+                                            ->reactive(),
+
+                                        Forms\Components\TextInput::make('tahun_display')
+                                            ->default(fn ($livewire) => \Carbon\Carbon::parse($livewire->record->tgl_surat ?? now())->format('Y'))
+                                            ->disabled()
+                                            ->reactive()
+                                            ->label(false),
+
+                                        Forms\Components\Hidden::make('tahun')
+                                            ->default(fn ($livewire) => \Carbon\Carbon::parse($livewire->record->tgl_surat ?? now())->format('Y'))
+                                            ->reactive(),
+                                    ]),
+                            ]),
+                        Forms\Components\DatePicker::make('tgl_surat')
+                            ->label('Tanggal Surat')
+                            ->required()
+                            ->default(now())
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                $set('bulan_romawi', toRomawi(\Carbon\Carbon::parse($state)->format('m')));
+                                $set('tahun', \Carbon\Carbon::parse($state)->format('Y'));
+                            }),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $no_st = "{$data['prefix']}/{$data['kode']}/{$data['unit']}/{$data['bulan_romawi']}/{$data['tahun']}";
+                        $record->update([
+                            'no_st' => $no_st,
+                            'tgl_surat' => $data['tgl_surat'],
+                        ]);
+                    })
+                    ->modalHeading('Buat Surat Tugas')
+                    ->modalSubmitActionLabel('Simpan'),
+         
                     ])
                     ->bulkActions([
                         Tables\Actions\DeleteBulkAction::make(),

@@ -51,10 +51,25 @@ class TaskAplikasi extends Model
 
         static::saving(function ($taskaplikasi) {
             $taskaplikasi->hitungDurasiDanLamaPekerjaan();
+                        // Update status marketing jika status task 'Completed'
+            if ($taskaplikasi->status === 'Completed' && $taskaplikasi->marketing_id) {
+                $marketing = Marketing::find($taskaplikasi->marketing_id);
+                if ($marketing) {
+                    $marketing->status = 'Completed';
+                    $marketing->save();
+                }
+            }
         });
 
         static::updating(function ($taskaplikasi) {
             $taskaplikasi->hitungDurasiDanLamaPekerjaan();
+               if ($taskaplikasi->status === 'Completed' && $taskaplikasi->marketing_id) {
+                $marketing = Marketing::find($taskaplikasi->marketing_id);
+                if ($marketing) {
+                    $marketing->status = 'Completed';
+                    $marketing->save();
+                }
+            }
         });
 
         static::created(function ($taskaplikasi) {
@@ -62,13 +77,22 @@ class TaskAplikasi extends Model
             if ($taskaplikasi->marketing_id) {
                 $marketing = Marketing::find($taskaplikasi->marketing_id);
                 if ($marketing) {
-                    $marketing->status = 'On Hold'; // Ubah status
+                    $marketing->status = 'Pengerjaan'; // Ubah status
                     $marketing->save(); // Simpan perubahan
                 }
             }
 
             $durasiProyek = $taskaplikasi->durasi_proyek;
         });
+        static::deleting(function ($taskaplikasi) {
+        if ($taskaplikasi->marketing_id) {
+            $marketing = Marketing::find($taskaplikasi->marketing_id);
+            if ($marketing) {
+                $marketing->status = 'Persiapan Operasional';
+                $marketing->save();
+            }
+        }
+    });
     }
 
     /**
