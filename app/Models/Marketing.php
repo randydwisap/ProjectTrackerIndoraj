@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Marketing extends Model
 {
@@ -65,6 +66,37 @@ class Marketing extends Model
         'note_operasional',
         'isArchived',
     ];
+        protected static function booted()
+    {
+        static::created(function ($marketing) {
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Marketing',
+                'menu_id' => $marketing->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
+        });
 
+        static::updated(function ($marketing) {
+            LogAktivitas::create([
+                'user_id' => Auth::id(),
+                'menu' => 'Marketing',
+                'menu_id' => $marketing->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
+        });
+
+        static::deleted(function ($marketing) {
+            LogAktivitas::create([
+                'user_id' => Auth::id(),
+                'menu' => 'Marketing',
+                'menu_id' => $marketing->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
+        });
+    }
     
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskDayAlihMedia extends Model
 {
@@ -101,6 +102,13 @@ class TaskDayAlihMedia extends Model
                     ->where('task_week_alih_media_id', $weekAlihMediaId)
                     ->where('tanggal', $tanggal)
                     ->update(['status' => $newStatus]);
+                LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Day Alih Media',
+                'menu_id' => $model->id,
+                'aksi' => 'Update/Buat/Hapus',
+                'waktu' => now(),
+            ]);
             }
         };
     

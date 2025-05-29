@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskInstrumen extends Model
 {
@@ -56,6 +57,13 @@ class TaskInstrumen extends Model
             if ($task->marketing) {
                 $task->marketing->update(['status' => 'Completed']);
             }
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Instrumen',
+                'menu_id' => $task->id,
+                'aksi' => 'Hapus',
+                'waktu' => now(),
+            ]);
         });
 
         static::deleting(function ($task) {
@@ -66,6 +74,13 @@ class TaskInstrumen extends Model
                 $marketing->save();
             }
         }
+                            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Instrumen',
+                'menu_id' => $task->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
         });
     }
 

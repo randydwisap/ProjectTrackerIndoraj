@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskWeekAlihMedia extends Model
 {
@@ -79,7 +80,13 @@ protected static function booted()
 
         $task = \App\Models\TaskAlihMedia::find($weekAlihMedia->task_alih_media_id);
         $task->save(); // Ini akan memicu saving & updating
-
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Week Alih media',
+                'menu_id' => $weekAlihMedia->id,
+                'aksi' => 'Saving',
+                'waktu' => now(),
+            ]);
    
     });
 }

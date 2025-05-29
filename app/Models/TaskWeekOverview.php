@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskWeekOverview extends Model
 {
@@ -103,7 +104,13 @@ protected static function booted()
         $task = \App\Models\Task::find($weekOverview->task_id);
         $task->hasil_pemilahan = $totalArsip;
         $task->save(); // Ini akan memicu saving & updating
-
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Week Pengolahan Arsip',
+                'menu_id' => $weekOverview->id,
+                'aksi' => 'Saving',
+                'waktu' => now(),
+            ]);
    
     });
 }

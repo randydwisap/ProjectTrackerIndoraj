@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class TaskAplikasi extends Model
 {
@@ -59,6 +60,13 @@ class TaskAplikasi extends Model
                     $marketing->save();
                 }
             }
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Aplikasi',
+                'menu_id' => $taskaplikasi->id,
+                'aksi' => 'Simpan',
+                'waktu' => now(),
+            ]);
         });
 
         static::updating(function ($taskaplikasi) {
@@ -70,6 +78,13 @@ class TaskAplikasi extends Model
                     $marketing->save();
                 }
             }
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Aplikasi',
+                'menu_id' => $taskaplikasi->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
         });
 
         static::created(function ($taskaplikasi) {
@@ -81,6 +96,13 @@ class TaskAplikasi extends Model
                     $marketing->save(); // Simpan perubahan
                 }
             }
+                        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Aplikasi',
+                'menu_id' => $taskaplikasi->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
 
             $durasiProyek = $taskaplikasi->durasi_proyek;
         });
@@ -92,6 +114,13 @@ class TaskAplikasi extends Model
                 $marketing->save();
             }
         }
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Aplikasi',
+                'menu_id' => $taskaplikasi->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
     });
     }
 

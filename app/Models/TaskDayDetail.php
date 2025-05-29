@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskDayDetail extends Model
 {
@@ -152,6 +153,14 @@ class TaskDayDetail extends Model
                     ->where('task_week_overview_id', $weekId)
                     ->where('tanggal', $tanggal)
                     ->update(['status' => $newStatus]);
+
+                LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Day Pengolahan Arsip',
+                'menu_id' => $model->id,
+                'aksi' => 'Update/Buat/Hapus',
+                'waktu' => now(),
+            ]);
             }
         };
     

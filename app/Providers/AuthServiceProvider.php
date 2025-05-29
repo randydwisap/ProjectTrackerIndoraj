@@ -32,7 +32,7 @@ class AuthServiceProvider extends ServiceProvider
         'user', 'role' , 'marketing', 'taskAlihMedia', 'taskDayAlihMedia', 'taskWeekAlihMedia', 'jenisTaskAlihMedia',
         'taskAplikasi', 'reportAplikasi', 'jenisTahapAplikasi'
         , 'taskFumigasi', 'reportFumigasi', 'jenisTahapFumigasi'
-        , 'task', 'taskDayDetail', 'taskWeekOverview', 'jenisTask', 'jenisInstrumen', 'jenisBarang', 'taskBarang', 'taskInstrumen', 'reportInstrumen'
+        , 'task', 'taskDayDetail', 'taskWeekOverview', 'jenisTask', 'jenisInstrumen', 'jenisBarang', 'taskBarang', 'taskInstrumen', 'reportInstrumen', 'logAktivitas'
     ];
 
     $permissions = ['view', 'create', 'update', 'delete'];

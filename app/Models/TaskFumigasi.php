@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class TaskFumigasi extends Model
@@ -62,6 +63,13 @@ class TaskFumigasi extends Model
                     $marketing->save();
                 }
             }
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Fumigasi',
+                'menu_id' => $taskfumigasi->id,
+                'aksi' => 'Simpan',
+                'waktu' => now(),
+            ]);
         });
 
         static::updating(function ($taskfumigasi) {
@@ -75,6 +83,13 @@ class TaskFumigasi extends Model
                     $marketing->save();
                 }
             }
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Fumigasi',
+                'menu_id' => $taskfumigasi->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
         });
 
         static::created(function ($taskfumigasi) {
@@ -86,6 +101,13 @@ class TaskFumigasi extends Model
                     $marketing->save();
                 }
             }
+                    LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Fumigasi',
+                'menu_id' => $taskfumigasi->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
         });
         
         static::deleting(function ($taskfumigasi) {
@@ -96,6 +118,13 @@ class TaskFumigasi extends Model
                 $marketing->save();
             }
         }
+        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Fumigasi',
+                'menu_id' => $taskfumigasi->id,
+                'aksi' => 'Hapus',
+                'waktu' => now(),
+            ]);
         });
     }
 

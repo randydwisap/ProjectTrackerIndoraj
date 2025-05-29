@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class TaskAlihMedia extends Model
 {
@@ -71,6 +72,13 @@ class TaskAlihMedia extends Model
             $taskAlihMedia->hitungResiko();  
             $taskAlihMedia->hitungTotalStep();   
             $taskAlihMedia->hitungTahap();
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Alih media',
+                'menu_id' => $taskAlihMedia->id,
+                'aksi' => 'Simpan',
+                'waktu' => now(),
+            ]);
         });
 
         static::updating(function ($taskAlihMedia) {
@@ -80,6 +88,13 @@ class TaskAlihMedia extends Model
             $taskAlihMedia->hitungResiko(); 
             $taskAlihMedia->hitungTotalStep();     
             $taskAlihMedia->hitungTahap();
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Alih media',
+                'menu_id' => $taskAlihMedia->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
         });
 
         static::created(function ($taskAlihMedia) {
@@ -112,6 +127,13 @@ class TaskAlihMedia extends Model
             // Ambil hari kerja untuk minggu ke-i, default ke 0 jika tidak ada
             $taskWeek->hari_kerja = $hariKerjaPerMinggu["HariKerjaMingguKe{$i}"] ?? 0;
 
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Alih media',
+                'menu_id' => $taskAlihMedia->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
             $taskWeek->save();             
             }
         });
@@ -123,6 +145,13 @@ class TaskAlihMedia extends Model
                 $marketing->save();
             }
         }
+                LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Alih media',
+                'menu_id' => $taskAlihMedia->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
         });
 
     }

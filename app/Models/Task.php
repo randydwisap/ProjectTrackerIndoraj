@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Auth;
 
 class Task extends Model
 {
@@ -77,6 +78,13 @@ class Task extends Model
             $task->hitungResiko();  
             $task->hitungTotalStep();   
             $task->hitungTahap();
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Pengolahan Arsip',
+                'menu_id' => $task->id,
+                'aksi' => 'Simpan',
+                'waktu' => now(),
+            ]);
         });
 
         static::updating(function ($task) {
@@ -88,6 +96,13 @@ class Task extends Model
             $task->hitungResiko();             
             $task->hitungTotalStep();     
             $task->hitungTahap();
+                        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Pengolahan Arsip',
+                'menu_id' => $task->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
         });
 
         static::created(function ($task) {
@@ -122,8 +137,16 @@ class Task extends Model
                     $marketing->save(); // Simpan perubahan
                 }
             }
+            LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Pengolahan Arsip',
+                'menu_id' => $task->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
         }
         });
+        
 
         static::deleting(function ($task) {
         if ($task->marketing_id) {
@@ -133,6 +156,13 @@ class Task extends Model
                 $marketing->save();
             }
         }
+        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Pengolahan Arsip',
+                'menu_id' => $task->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
         });
     }
 

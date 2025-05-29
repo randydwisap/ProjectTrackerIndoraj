@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class TaskBarang extends Model
 {
@@ -56,6 +57,13 @@ class TaskBarang extends Model
             if ($task->marketing) {
                 $task->marketing->update(['status' => 'Completed']);
             }
+                        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Barang',
+                'menu_id' => $task->id,
+                'aksi' => 'Create',
+                'waktu' => now(),
+            ]);
         });
 
         static::deleting(function ($task) {
@@ -66,6 +74,24 @@ class TaskBarang extends Model
                 $marketing->save();
             }
         }
+        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Barang',
+                'menu_id' => $task->id,
+                'aksi' => 'Delete',
+                'waktu' => now(),
+            ]);
+        });
+
+        
+        static::updated(function ($task) {
+        LogAktivitas::create([
+                'user_id' => Auth::id(), // ID user yang login
+                'menu' => 'Task Barang',
+                'menu_id' => $task->id,
+                'aksi' => 'Update',
+                'waktu' => now(),
+            ]);
         });
     }
 }
